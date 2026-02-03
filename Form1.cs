@@ -14,18 +14,12 @@ namespace KGHCashierPOS
     using System;
     using System.Collections.Generic;
     using System.Windows.Forms;
+    using GHCashierPOS;
 
 
 
     public partial class Form1 : Form
     {
-
-        class GameSession
-        {
-            public string GameName { get; set; }
-            public int TotalMinutes { get; set; }
-            public decimal TotalPrice { get; set; }
-        }
 
         Dictionary<string, GameSession> activeSessions =
           new Dictionary<string, GameSession>();
@@ -108,33 +102,38 @@ namespace KGHCashierPOS
                 {
                     GameName = selectedGame,
                     TotalMinutes = minutes,
-                    TotalPrice = priceToAdd
+                    TotalPrice = priceToAdd,
+                    StartTime = DateTime.Now 
                 };
             }
 
-            RefreshListBox();
+            RefreshListView();
         }
 
-        // REFRESH LISTBOX
+        // REFRESH LISTVIEW
 
-        private void RefreshListBox()
+        private void RefreshListView()
         {
-            lstSelectedGames.Items.Clear();
+            lvSelectedGames.Items.Clear();
             totalAmount = 0;
 
             foreach (var session in activeSessions.Values)
             {
-                int hours = session.TotalMinutes / 60;
-                int mins = session.TotalMinutes % 60;
+                string durationText =
+                    session.TotalMinutes >= 60
+                    ? $"{session.TotalMinutes / 60} hr"
+                    : $"{session.TotalMinutes} min";
 
-                string timeText =
-                    hours > 0 && mins > 0 ? $"{hours} hr {mins} min" :
-                    hours > 0 ? $"{hours} hr" :
-                    $"{mins} min";
+                DateTime endTime = session.StartTime.AddMinutes(session.TotalMinutes);
 
-                lstSelectedGames.Items.Add(
-                    $"{session.GameName} – {timeText} – ₱{session.TotalPrice}"
-                );
+                ListViewItem item = new ListViewItem(session.GameName);
+                item.SubItems.Add(durationText);
+                item.SubItems.Add("₱" + session.TotalPrice.ToString("0.00"));
+                item.SubItems.Add(session.StartTime.ToString("hh:mm tt"));
+                item.SubItems.Add(endTime.ToString("hh:mm tt"));
+                item.SubItems.Add("₱" + session.TotalPrice.ToString("0.00"));
+
+                lvSelectedGames.Items.Add(item);
 
                 totalAmount += session.TotalPrice;
             }
@@ -144,17 +143,17 @@ namespace KGHCashierPOS
 
 
 
+
         // REMOVE SELECTED GAME
         private void btnRemoveGame_Click(object sender, EventArgs e)
         {
-            if (lstSelectedGames.SelectedIndex == -1)
+            if (lvSelectedGames.SelectedItems.Count == 0)
                 return;
 
-            string selectedText = lstSelectedGames.SelectedItem.ToString();
-            string gameName = selectedText.Split('–')[0].Trim();
+            string gameName = lvSelectedGames.SelectedItems[0].Text;
 
             activeSessions.Remove(gameName);
-            RefreshListBox();
+            RefreshListView();
         }
 
 
@@ -185,7 +184,19 @@ namespace KGHCashierPOS
         }
 
         // PROCEED TO PAYMENT
-        // CODE HERE LEFT BLANK FOR FUTURE IMPLEMENTATION
+
+        private void btnProceedPayment_Click(object sender, EventArgs e)
+        {
+            paymentControl1.LoadPaymentData(activeSessions, totalAmount);
+            paymentControl1.Visible = true;
+            paymentControl1.BringToFront();
+        }
+
+        public void ClosePayment()
+        {
+            paymentControl1.Visible = false;
+        }
+
 
         // EXTEND SESSION
 
