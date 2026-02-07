@@ -29,7 +29,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.lblUser = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblDate = new System.Windows.Forms.Label();
@@ -41,7 +44,6 @@
             this.btnTableTennis = new System.Windows.Forms.Button();
             this.btnScooter = new System.Windows.Forms.Button();
             this.btnBadminton = new System.Windows.Forms.Button();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.panel3 = new System.Windows.Forms.Panel();
             this.chkExtend = new System.Windows.Forms.CheckBox();
             this.btn30min = new System.Windows.Forms.Button();
@@ -72,7 +74,8 @@
             this.StartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.EndTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SubTotal = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.btnAddGame = new System.Windows.Forms.Button();
+            this.btnClearCashierForm = new System.Windows.Forms.Button();
+            this.timerDateTime = new System.Windows.Forms.Timer(this.components);
             this.paymentControl1 = new KGHCashierPOS.paymentControl1();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -88,10 +91,34 @@
             this.panel1.Controls.Add(this.lblDate);
             this.panel1.Controls.Add(this.lblTime);
             this.panel1.Controls.Add(this.pictureBox1);
+            this.panel1.Controls.Add(this.label4);
+            this.panel1.Controls.Add(this.label3);
             this.panel1.Location = new System.Drawing.Point(-1, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(1289, 71);
             this.panel1.TabIndex = 0;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.ForeColor = System.Drawing.SystemColors.Control;
+            this.label4.Location = new System.Drawing.Point(92, 38);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(71, 28);
+            this.label4.TabIndex = 37;
+            this.label4.Text = "TIME :";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.SystemColors.Control;
+            this.label3.Location = new System.Drawing.Point(90, 10);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(74, 28);
+            this.label3.TabIndex = 36;
+            this.label3.Text = "DATE :";
             // 
             // lblUser
             // 
@@ -119,22 +146,22 @@
             this.lblDate.AutoSize = true;
             this.lblDate.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblDate.ForeColor = System.Drawing.SystemColors.Control;
-            this.lblDate.Location = new System.Drawing.Point(73, 13);
+            this.lblDate.Location = new System.Drawing.Point(147, 11);
             this.lblDate.Name = "lblDate";
-            this.lblDate.Size = new System.Drawing.Size(68, 28);
+            this.lblDate.Size = new System.Drawing.Size(54, 28);
             this.lblDate.TabIndex = 6;
-            this.lblDate.Text = "DATE:";
+            this.lblDate.Text = "date";
             // 
             // lblTime
             // 
             this.lblTime.AutoSize = true;
             this.lblTime.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTime.ForeColor = System.Drawing.SystemColors.Control;
-            this.lblTime.Location = new System.Drawing.Point(73, 38);
+            this.lblTime.Location = new System.Drawing.Point(147, 38);
             this.lblTime.Name = "lblTime";
-            this.lblTime.Size = new System.Drawing.Size(65, 28);
+            this.lblTime.Size = new System.Drawing.Size(55, 28);
             this.lblTime.TabIndex = 5;
-            this.lblTime.Text = "TIME:";
+            this.lblTime.Text = "time";
             // 
             // pictureBox1
             // 
@@ -304,7 +331,7 @@
             // lblTotal
             // 
             this.lblTotal.AutoSize = true;
-            this.lblTotal.BackColor = System.Drawing.SystemColors.Window;
+            this.lblTotal.BackColor = System.Drawing.SystemColors.Control;
             this.lblTotal.Font = new System.Drawing.Font("Nirmala Text", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTotal.Location = new System.Drawing.Point(815, 617);
             this.lblTotal.Name = "lblTotal";
@@ -359,7 +386,9 @@
             // 
             // btn1
             // 
+            this.btn1.AccessibleRole = System.Windows.Forms.AccessibleRole.Cursor;
             this.btn1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn1.Font = new System.Drawing.Font("Mongolian Baiti", 16F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btn1.Location = new System.Drawing.Point(415, 191);
             this.btn1.Name = "btn1";
             this.btn1.Size = new System.Drawing.Size(82, 75);
@@ -371,6 +400,7 @@
             // btn2
             // 
             this.btn2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn2.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn2.Location = new System.Drawing.Point(503, 191);
             this.btn2.Name = "btn2";
             this.btn2.Size = new System.Drawing.Size(82, 75);
@@ -382,6 +412,7 @@
             // btn3
             // 
             this.btn3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn3.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn3.Location = new System.Drawing.Point(591, 191);
             this.btn3.Name = "btn3";
             this.btn3.Size = new System.Drawing.Size(82, 75);
@@ -393,6 +424,7 @@
             // btn4
             // 
             this.btn4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn4.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn4.Location = new System.Drawing.Point(415, 272);
             this.btn4.Name = "btn4";
             this.btn4.Size = new System.Drawing.Size(82, 75);
@@ -404,6 +436,7 @@
             // btn5
             // 
             this.btn5.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn5.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn5.Location = new System.Drawing.Point(503, 272);
             this.btn5.Name = "btn5";
             this.btn5.Size = new System.Drawing.Size(82, 75);
@@ -415,6 +448,7 @@
             // btn6
             // 
             this.btn6.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn6.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn6.Location = new System.Drawing.Point(591, 272);
             this.btn6.Name = "btn6";
             this.btn6.Size = new System.Drawing.Size(82, 75);
@@ -426,6 +460,7 @@
             // btn7
             // 
             this.btn7.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn7.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn7.Location = new System.Drawing.Point(415, 353);
             this.btn7.Name = "btn7";
             this.btn7.Size = new System.Drawing.Size(82, 75);
@@ -437,6 +472,7 @@
             // btn8
             // 
             this.btn8.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn8.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn8.Location = new System.Drawing.Point(503, 353);
             this.btn8.Name = "btn8";
             this.btn8.Size = new System.Drawing.Size(82, 75);
@@ -448,6 +484,7 @@
             // btn9
             // 
             this.btn9.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn9.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn9.Location = new System.Drawing.Point(591, 353);
             this.btn9.Name = "btn9";
             this.btn9.Size = new System.Drawing.Size(82, 75);
@@ -461,7 +498,7 @@
             this.btnBackspace.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(206)))), ((int)(((byte)(59)))), ((int)(((byte)(114)))));
             this.btnBackspace.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnBackspace.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnBackspace.Font = new System.Drawing.Font("Nirmala Text", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnBackspace.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btnBackspace.Location = new System.Drawing.Point(503, 434);
             this.btnBackspace.Name = "btnBackspace";
             this.btnBackspace.Size = new System.Drawing.Size(82, 75);
@@ -473,6 +510,7 @@
             // btn0
             // 
             this.btn0.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn0.Font = new System.Drawing.Font("Mongolian Baiti", 16F);
             this.btn0.Location = new System.Drawing.Point(415, 434);
             this.btn0.Name = "btn0";
             this.btn0.Size = new System.Drawing.Size(82, 75);
@@ -497,7 +535,7 @@
             // totalValue
             // 
             this.totalValue.AutoSize = true;
-            this.totalValue.BackColor = System.Drawing.SystemColors.Window;
+            this.totalValue.BackColor = System.Drawing.SystemColors.Control;
             this.totalValue.Font = new System.Drawing.Font("Nirmala Text", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.totalValue.Location = new System.Drawing.Point(723, 617);
             this.totalValue.Name = "totalValue";
@@ -555,17 +593,23 @@
             this.SubTotal.Text = "Sub Total";
             this.SubTotal.Width = 100;
             // 
-            // btnAddGame
+            // btnClearCashierForm
             // 
-            this.btnAddGame.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(190)))), ((int)(((byte)(95)))));
-            this.btnAddGame.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAddGame.Font = new System.Drawing.Font("Microsoft Sans Serif", 5F, System.Drawing.FontStyle.Bold);
-            this.btnAddGame.Location = new System.Drawing.Point(415, 515);
-            this.btnAddGame.Name = "btnAddGame";
-            this.btnAddGame.Size = new System.Drawing.Size(127, 41);
-            this.btnAddGame.TabIndex = 17;
-            this.btnAddGame.Text = "ADD GAME";
-            this.btnAddGame.UseVisualStyleBackColor = false;
+            this.btnClearCashierForm.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(190)))), ((int)(((byte)(95)))));
+            this.btnClearCashierForm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClearCashierForm.Font = new System.Drawing.Font("Microsoft Sans Serif", 5F, System.Drawing.FontStyle.Bold);
+            this.btnClearCashierForm.Location = new System.Drawing.Point(415, 515);
+            this.btnClearCashierForm.Name = "btnClearCashierForm";
+            this.btnClearCashierForm.Size = new System.Drawing.Size(127, 41);
+            this.btnClearCashierForm.TabIndex = 17;
+            this.btnClearCashierForm.Text = "CLEAR";
+            this.btnClearCashierForm.UseVisualStyleBackColor = false;
+            this.btnClearCashierForm.Click += new System.EventHandler(this.btnClearCashierForm_Click_1);
+            // 
+            // timerDateTime
+            // 
+            this.timerDateTime.Interval = 1000;
+            this.timerDateTime.Tick += new System.EventHandler(this.timerDateTime_Tick);
             // 
             // paymentControl1
             // 
@@ -599,7 +643,7 @@
             this.Controls.Add(this.btn1);
             this.Controls.Add(this.txtOrderNumber);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.btnAddGame);
+            this.Controls.Add(this.btnClearCashierForm);
             this.Controls.Add(this.btnRemoveGame);
             this.Controls.Add(this.btnProceedPayment);
             this.Controls.Add(this.lblTotal);
@@ -634,7 +678,6 @@
         private System.Windows.Forms.Button btnBadminton;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Label lblSelect;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Button btn30min;
         private System.Windows.Forms.Button btn1hour;
         private System.Windows.Forms.Panel panel3;
@@ -667,8 +710,11 @@
         private System.Windows.Forms.ColumnHeader EndTime;
         private System.Windows.Forms.ColumnHeader SubTotal;
         private System.Windows.Forms.Label lblUser;
-        private System.Windows.Forms.Button btnAddGame;
+        private System.Windows.Forms.Button btnClearCashierForm;
         private paymentControl1 paymentControl1;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Timer timerDateTime;
     }
 }
 

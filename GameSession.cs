@@ -9,6 +9,7 @@ namespace KGHCashierPOS
     
     public class GameSession
     {
+        public string CashierName { get; set; }
         public string GameName { get; set; }
         public int TotalMinutes { get; set; }
         public decimal RatePerHour { get; set; }
@@ -26,6 +27,12 @@ namespace KGHCashierPOS
         public string DiscountID { get; set; }
         public decimal DiscountAmount { get; set; }
 
+        // FOR ORDER NUMBER ADDITIONAL FUNCTION
+        public int SessionId { get; set; }
+        public string OrderNumber { get; set; }
+        public string GameType { get; set; }
+
     }
 
 }
+

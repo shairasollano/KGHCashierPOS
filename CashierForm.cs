@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,15 +8,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using MySql.Data.MySqlClient;
 
 namespace KGHCashierPOS
 {
 
+    using KGHCashierPOS;
     using System;
     using System.Collections.Generic;
+    using System.Data.SqlTypes;
     using System.Windows.Forms;
-    using KGHCashierPOS;
 
 
     public partial class CashierForm : Form
@@ -230,6 +231,15 @@ namespace KGHCashierPOS
 
         private void btnProceedPayment_Click(object sender, EventArgs e)
         {
+
+            // Validate that there are items in the summary
+            if (lvSelectedGames.Items.Count == 0)
+            {
+                MessageBox.Show("Please add games to the order first!", "No Items",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             paymentControl.LoadPaymentData(activeSessions, totalAmount);
             paymentControl.Visible = true;
             paymentControl.BringToFront();
@@ -250,10 +260,16 @@ namespace KGHCashierPOS
                 MessageBox.Show("Extension enabled.");
         }
 
+
+        // DATABASE CONNECTION TEST
         private void CashierForm_Load(object sender, EventArgs e)
         {
             TestDatabaseConnection();
+            UpdateDateTime();        // show immediately
+            timerDateTime.Start();   // start live update
         }
+
+
 
         private void TestDatabaseConnection()
         {
@@ -272,5 +288,36 @@ namespace KGHCashierPOS
             }
         }
 
+
+         private void timerDateTime_Tick(object sender, EventArgs e)
+        {
+            UpdateDateTime();
+        }
+
+        private void UpdateDateTime()
+        {
+            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy"); // August 12, 2026
+            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   // 09:45:12 PM
+        }
+
+
+        private void ResetTransaction()
+        {
+            txtOrderNumber.Clear();
+            lvSelectedGames.Items.Clear();
+            lblTotal.Text = "₱0.00";
+
+            activeSessions.Clear();
+            totalAmount = 0;
+
+            btnProceedPayment.Enabled = false;
+        }
+
+        private void btnClearCashierForm_Click_1(object sender, EventArgs e)
+        {
+            ResetTransaction();
+        }
+
+       
     }
 }
