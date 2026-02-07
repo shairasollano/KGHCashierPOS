@@ -93,3 +93,5 @@ C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\System.Configuration.Configur
 C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\System.IO.Pipelines.xml
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.extratodelete.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.OrderForm.resources
+C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\Shared.Core.dll
+C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\Shared.Core.pdb

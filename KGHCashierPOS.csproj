@@ -255,5 +255,11 @@
   <ItemGroup>
     <None Include="Resources\MATCHPOINT.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Shared.Core\Shared.Core.csproj">
+      <Project>{b074f59e-dbce-4dd5-b2d5-acb8347b7840}</Project>
+      <Name>Shared.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
