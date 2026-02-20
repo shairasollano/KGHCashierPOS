@@ -31,13 +31,13 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.lblUser = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblDate = new System.Windows.Forms.Label();
             this.lblTime = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
             this.lblSelect = new System.Windows.Forms.Label();
             this.btnBilliards = new System.Windows.Forms.Button();
@@ -98,28 +98,6 @@
             this.panel1.Size = new System.Drawing.Size(1289, 71);
             this.panel1.TabIndex = 0;
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.SystemColors.Control;
-            this.label4.Location = new System.Drawing.Point(92, 38);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(71, 28);
-            this.label4.TabIndex = 37;
-            this.label4.Text = "TIME :";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.SystemColors.Control;
-            this.label3.Location = new System.Drawing.Point(90, 10);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(74, 28);
-            this.label3.TabIndex = 36;
-            this.label3.Text = "DATE :";
-            // 
             // lblUser
             // 
             this.lblUser.AutoSize = true;
@@ -172,6 +150,28 @@
             this.pictureBox1.Size = new System.Drawing.Size(59, 63);
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.ForeColor = System.Drawing.SystemColors.Control;
+            this.label4.Location = new System.Drawing.Point(92, 38);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(71, 28);
+            this.label4.TabIndex = 37;
+            this.label4.Text = "TIME :";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.SystemColors.Control;
+            this.label3.Location = new System.Drawing.Point(90, 10);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(74, 28);
+            this.label3.TabIndex = 36;
+            this.label3.Text = "DATE :";
             // 
             // panel2
             // 
@@ -283,6 +283,7 @@
             this.chkExtend.TabIndex = 21;
             this.chkExtend.Text = "Extend Session";
             this.chkExtend.UseVisualStyleBackColor = true;
+            this.chkExtend.Visible = false;
             this.chkExtend.Click += new System.EventHandler(this.chkExtend_CheckedChanged);
             // 
             // btn30min
@@ -335,9 +336,9 @@
             this.lblTotal.Font = new System.Drawing.Font("Nirmala Text", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTotal.Location = new System.Drawing.Point(815, 617);
             this.lblTotal.Name = "lblTotal";
-            this.lblTotal.Size = new System.Drawing.Size(129, 32);
+            this.lblTotal.Size = new System.Drawing.Size(35, 32);
             this.lblTotal.TabIndex = 12;
-            this.lblTotal.Text = "totalValue";
+            this.lblTotal.Text = "   ";
             // 
             // btnProceedPayment
             // 
@@ -613,11 +614,12 @@
             // 
             // paymentControl1
             // 
-            this.paymentControl1.AutoSize = true;
-            this.paymentControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.paymentControl1.Location = new System.Drawing.Point(0, 0);
+            this.paymentControl1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.paymentControl1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.paymentControl1.Location = new System.Drawing.Point(0, 69);
+            this.paymentControl1.Margin = new System.Windows.Forms.Padding(0);
             this.paymentControl1.Name = "paymentControl1";
-            this.paymentControl1.Size = new System.Drawing.Size(1252, 717);
+            this.paymentControl1.Size = new System.Drawing.Size(1252, 648);
             this.paymentControl1.TabIndex = 35;
             this.paymentControl1.Visible = false;
             // 

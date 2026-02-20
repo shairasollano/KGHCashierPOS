@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 using KGHCashierPOS;
@@ -14,7 +15,6 @@ namespace KGHCashierPOS
         // ============ VARIABLES ============
         private Dictionary<string, GameSession> _sessions;
         private decimal _totalAmount;
-
         private decimal discountAmount = 0;
         private decimal subtotalAmount = 0;
         private decimal finalAmount = 0;
@@ -23,6 +23,7 @@ namespace KGHCashierPOS
         public paymentControl1()
         {
             InitializeComponent();
+            InitializeRichTextBox();  // NEW
             InitializeDiscountComboBox();
         }
 
@@ -31,7 +32,18 @@ namespace KGHCashierPOS
             CalculateTotals();
         }
 
+        public event Action PaymentSuccessful;
+
+
         // ============ INITIALIZATION ============
+        private void InitializeRichTextBox()
+        {
+            rtbSummary.ReadOnly = true;
+            rtbSummary.Font = new System.Drawing.Font("Courier New", 9);
+            rtbSummary.BackColor = System.Drawing.Color.White;
+            rtbSummary.BorderStyle = BorderStyle.FixedSingle;
+        }
+
         private void InitializeDiscountComboBox()
         {
             cboDiscountType.Items.Clear();
@@ -52,26 +64,60 @@ namespace KGHCashierPOS
             _sessions = sessions;
             _totalAmount = total;
 
-            lvSummary.Items.Clear();
+            // Clear and build transaction summary
+            rtbSummary.Clear();
+            StringBuilder summary = new StringBuilder();
 
-            foreach (var s in sessions.Values)
+            summary.AppendLine("        ════════════════════════════════════════════════");
+            summary.AppendLine("            TRANSACTION DETAILS");
+            summary.AppendLine("        ════════════════════════════════════════════════");
+            summary.AppendLine();
+
+            foreach (var session in sessions.Values)
             {
-                string duration = s.TotalMinutes >= 60
-                    ? $"{s.TotalMinutes / 60} hr"
-                    : $"{s.TotalMinutes} min";
+                // Format duration
+                string duration;
+                if (session.TotalMinutes >= 60)
+                {
+                    int hours = session.TotalMinutes / 60;
+                    int minutes = session.TotalMinutes % 60;
+                    duration = minutes > 0
+                        ? $"       {hours} hours {minutes} minutes"
+                        : $"       {hours} hour" + (hours > 1 ? "s" : "");
+                }
+                else
+                {
+                    duration = $"       {session.TotalMinutes} minutes";
+                }
 
-                ListViewItem item = new ListViewItem(s.GameName);
-                item.SubItems.Add(duration);
-                item.SubItems.Add("₱" + s.TotalPrice.ToString("0.00"));
+                // Calculate rate
+                decimal hours_decimal = session.TotalMinutes / 60.0m;
+                decimal hourlyRate = hours_decimal > 0 ? session.TotalPrice / hours_decimal : session.TotalPrice;
 
-                lvSummary.Items.Add(item);
+                // Build transaction details
+                summary.AppendLine($"       Game Type:        {session.GameName}");
+
+                summary.AppendLine($"       Start Time:       {session.StartTime:hh:mm tt}");
+
+                summary.AppendLine($"       End Time:         {session.EndTime:hh:mm tt}");
+
+                summary.AppendLine($"       Duration:  {duration}");
+                summary.AppendLine($"       Rate:             ₱ {hourlyRate:N2}/hour");
+                summary.AppendLine("       ───────────────────────────────────────────────");
+                summary.AppendLine($"       Subtotal:         ₱ {session.TotalPrice:N2}");
+                summary.AppendLine();
             }
 
+            rtbSummary.Text = summary.ToString();
+
+            // Calculate and display totals
             CalculateTotals();
 
+            // Clear payment fields
             txtCashReceived.Clear();
             txtGcashRef.Clear();
-            lblChange.Text = "₱0.00";
+            lblChange.Text = "₱ 0.00";
+
         }
 
         // ============ DISCOUNT EVENT HANDLERS ============
@@ -82,7 +128,6 @@ namespace KGHCashierPOS
 
             string selectedDiscount = cboDiscountType.SelectedItem.ToString();
 
-            // Validate eligibility first
             if (!ValidateDiscountEligibility(selectedDiscount))
                 return;
 
@@ -99,7 +144,7 @@ namespace KGHCashierPOS
                     txtDiscountAmount.Enabled = false;
                     txtDiscountAmount.Clear();
                     ApplyPercentageDiscount(0.20m);
-                    MessageBox.Show($"20% Senior/PWD discount applied!\nDiscount: ₱{discountAmount:N2}",
+                    MessageBox.Show($"20% discount applied!\nDiscount: ₱ {discountAmount:N2}",
                         "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     break;
 
@@ -107,7 +152,7 @@ namespace KGHCashierPOS
                     txtDiscountAmount.Enabled = false;
                     txtDiscountAmount.Clear();
                     ApplyPercentageDiscount(0.10m);
-                    MessageBox.Show($"10% Member discount applied!\nDiscount: ₱{discountAmount:N2}",
+                    MessageBox.Show($"10% discount applied!\nDiscount: ₱ {discountAmount:N2}",
                         "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     break;
 
@@ -126,10 +171,8 @@ namespace KGHCashierPOS
                     break;
             }
 
-            // Update the display immediately
             CalculateTotals();
         }
-
 
         private void txtDiscountAmount_TextChanged(object sender, EventArgs e)
         {
@@ -176,32 +219,116 @@ namespace KGHCashierPOS
             }
         }
 
+        // ============ APPLY DISCOUNT BUTTON ============
+        private void btnApplyDiscount_Click(object sender, EventArgs e)
+        {
+            if (cboDiscountType.SelectedItem == null)
+            {
+                MessageBox.Show("Please select a discount type first.", "Apply Discount",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string selectedDiscount = cboDiscountType.SelectedItem.ToString();
+
+            switch (selectedDiscount)
+            {
+                case "None":
+                    MessageBox.Show("No discount selected.", "Apply Discount",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+
+                case "Senior Citizen (20%)":
+                case "PWD (20%)":
+                    if (!ValidateDiscountEligibility(selectedDiscount))
+                        return;
+
+                    subtotalAmount = CalculateSubtotal();
+                    discountAmount = subtotalAmount * 0.20m;
+
+                    MessageBox.Show($"20% discount applied!\nDiscount Amount: ₱ {discountAmount:N2}",
+                        "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+
+                case "Member (10%)":
+                    subtotalAmount = CalculateSubtotal();
+                    discountAmount = subtotalAmount * 0.10m;
+
+                    MessageBox.Show($"10% discount applied!\nDiscount Amount: ₱ {discountAmount:N2}",
+                        "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+
+                case "Promo Code":
+                    if (string.IsNullOrWhiteSpace(txtDiscountAmount.Text))
+                    {
+                        MessageBox.Show("Please enter a promo code.", "Apply Discount",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        txtDiscountAmount.Focus();
+                        return;
+                    }
+
+                    ValidatePromoCode(txtDiscountAmount.Text);
+                    return;
+
+                case "Custom Amount":
+                    if (string.IsNullOrWhiteSpace(txtDiscountAmount.Text))
+                    {
+                        MessageBox.Show("Please enter a discount amount.", "Apply Discount",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        txtDiscountAmount.Focus();
+                        return;
+                    }
+
+                    if (!decimal.TryParse(txtDiscountAmount.Text, out decimal customAmount))
+                    {
+                        MessageBox.Show("Please enter a valid amount.", "Apply Discount",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        txtDiscountAmount.Focus();
+                        return;
+                    }
+
+                    subtotalAmount = CalculateSubtotal();
+
+                    if (customAmount > subtotalAmount)
+                    {
+                        MessageBox.Show($"Discount amount (₱{customAmount:N2}) cannot exceed subtotal (₱ {subtotalAmount:N2})!",
+                            "Invalid Discount", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    discountAmount = customAmount;
+
+                    MessageBox.Show($"Custom discount applied!\nDiscount Amount: ₱{discountAmount:N2}",
+                        "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+            }
+
+            CalculateTotals();
+        }
+
         // ============ DISCOUNT CALCULATION ============
         private void ApplyPercentageDiscount(decimal percentage)
         {
             subtotalAmount = CalculateSubtotal();
             discountAmount = subtotalAmount * percentage;
 
-            // Update label with red color to highlight discount
             if (lblDiscountAmount != null)
             {
-                lblDiscountAmount.Text = "-₱" + discountAmount.ToString("N2");
+                lblDiscountAmount.Text = "- ₱ " + discountAmount.ToString("N2");
                 lblDiscountAmount.ForeColor = System.Drawing.Color.Red;
             }
         }
+
         private decimal CalculateSubtotal()
         {
             decimal subtotal = 0;
 
-            foreach (ListViewItem item in lvSummary.Items)
+            // Calculate from _sessions instead of RichTextBox
+            if (_sessions != null)
             {
-                if (item.SubItems.Count > 2)
+                foreach (var session in _sessions.Values)
                 {
-                    string amountText = item.SubItems[2].Text.Replace("₱", "").Replace(",", "").Trim();
-                    if (decimal.TryParse(amountText, out decimal amount))
-                    {
-                        subtotal += amount;
-                    }
+                    subtotal += session.TotalPrice;
                 }
             }
 
@@ -213,26 +340,33 @@ namespace KGHCashierPOS
             // Calculate subtotal
             subtotalAmount = CalculateSubtotal();
 
-            // Apply discount
+            // Apply discount (NO TAX)
             finalAmount = subtotalAmount - discountAmount;
 
-            // Update ALL labels - MAKE SURE THESE LABEL NAMES MATCH YOUR FORM
+            // Update labels
             if (lblSubtotal != null)
-                lblSubtotal.Text = "₱" + subtotalAmount.ToString("N2");
+            {
+                lblSubtotal.Text = "₱ " + subtotalAmount.ToString("N2");
+            }
 
             if (lblDiscountAmount != null)
-                lblDiscountAmount.Text = "-₱" + discountAmount.ToString("N2");
+            {
+                lblDiscountAmount.Text = "- ₱ " + discountAmount.ToString("N2");
+                lblDiscountAmount.ForeColor = System.Drawing.Color.Red;
+            }
 
             if (lblTotalAmount != null)
-                lblTotalAmount.Text = "₱" + finalAmount.ToString("N2");
+            {
+                lblTotalAmount.Text = "₱ " + finalAmount.ToString("N2");
+            }
 
-            // Also update the change if cash is entered
+            // Update change if cash is entered
             if (rbCash != null && rbCash.Checked && !string.IsNullOrEmpty(txtCashReceived.Text))
             {
                 if (decimal.TryParse(txtCashReceived.Text, out decimal cash))
                 {
                     decimal change = cash - finalAmount;
-                    lblChange.Text = change >= 0 ? "₱" + change.ToString("N2") : "Insufficient";
+                    lblChange.Text = change >= 0 ? "₱ " + change.ToString("N2") : "Insufficient";
                 }
             }
         }
@@ -338,19 +472,24 @@ namespace KGHCashierPOS
                 if (change >= 0)
                 {
                     lblChange.Text = "₱" + change.ToString("N2");
+                    lblChange.ForeColor = System.Drawing.Color.Green;
                     btnConfirmPayment.Enabled = true;
                 }
                 else
                 {
                     lblChange.Text = "Insufficient";
+                    lblChange.ForeColor = System.Drawing.Color.Red;
                     btnConfirmPayment.Enabled = false;
                 }
             }
             else
             {
-                lblChange.Text = "₱0.00";
+                lblChange.Text = "₱ 0.00";
+                lblChange.ForeColor = System.Drawing.Color.Black;
             }
         }
+
+ 
 
         // ============ PAYMENT PROCESSING ============
         private void btnConfirmPayment_Click(object sender, EventArgs e)
@@ -438,7 +577,7 @@ namespace KGHCashierPOS
                 GenerateReceiptPDF(paymentMethod, cashAmount.ToString("0.00"), change, reference);
 
                 // Log activity
-                LogActivity("Payment Processed", $"{paymentMethod} - ₱{finalAmount:N2}");
+                LogActivity("Payment Processed", $"{paymentMethod} - ₱ {finalAmount:N2}");
 
                 MessageBox.Show("Payment successful!\nReceipt has been generated.", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -449,6 +588,35 @@ namespace KGHCashierPOS
             {
                 MessageBox.Show($"Error processing payment: {ex.Message}", "Payment Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            PaymentSuccessful?.Invoke();
+
+        }
+
+
+
+        // UPDATE ORDER STATUS TO COMPLETED
+        private void UpdateOrderStatus(string orderNumber)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(Database.ConnectionString))
+                {
+                    conn.Open();
+
+                    string query = "UPDATE orders SET status = 'Completed' WHERE order_number = @orderNo";
+
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating order status: {ex.Message}");
             }
         }
 
@@ -508,7 +676,7 @@ namespace KGHCashierPOS
                 string query = @"
                     INSERT INTO payments
                     (session_id, payment_method, amount_paid, discount_type,
-                     discount_amount, final_amount, receipt_no, reference_no, payment_date)
+                     discount_amount, final_amount, receipt_no, amount_tendered, payment_date)
                     VALUES
                     (@sid, @method, @amt, @dtype, @disc, @final, @rno, @ref, NOW())";
 
@@ -526,14 +694,13 @@ namespace KGHCashierPOS
             }
         }
 
+
         // ============ UTILITY METHODS ============
         private void LogActivity(string activity, string details)
         {
             try
             {
                 System.Diagnostics.Debug.WriteLine($"[{DateTime.Now}] {activity}: {details}");
-
-                // TODO: Implement CMS integration here if needed
             }
             catch (Exception ex)
             {
@@ -545,85 +712,85 @@ namespace KGHCashierPOS
         {
             this.Visible = false;
         }
-
+       
+        
+        // ============ PREVIEW RECEIPT ============
         private void btnPreviewReceipt_Click(object sender, EventArgs e)
         {
-            // Validate that there are items
-            if (lvSummary.Items.Count == 0)
+            if (_sessions == null || _sessions.Count == 0)
             {
-                MessageBox.Show("No items to preview!", "Preview Receipt",
+                MessageBox.Show("No transactions to preview!", "Preview Receipt",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Create preview form
             Form previewForm = new Form();
-            previewForm.Text = "Receipt Preview";
-            previewForm.Size = new System.Drawing.Size(400, 700);
+            previewForm.Text = "          Receipt Preview";
+            previewForm.Size = new System.Drawing.Size(450, 700);
             previewForm.StartPosition = FormStartPosition.CenterParent;
             previewForm.FormBorderStyle = FormBorderStyle.FixedDialog;
             previewForm.MaximizeBox = false;
             previewForm.MinimizeBox = false;
 
-            // Create RichTextBox for preview
             RichTextBox rtbPreview = new RichTextBox();
             rtbPreview.Dock = DockStyle.Fill;
             rtbPreview.Font = new System.Drawing.Font("Courier New", 9);
             rtbPreview.ReadOnly = true;
             rtbPreview.BackColor = System.Drawing.Color.White;
 
-            // Build receipt content
-            System.Text.StringBuilder receipt = new System.Text.StringBuilder();
+            StringBuilder receipt = new StringBuilder();
 
-            receipt.AppendLine("═══════════════════════════════════");
-            receipt.AppendLine("         MATCH POINT GAMING HUB");
-            receipt.AppendLine("═══════════════════════════════════");
+            receipt.AppendLine("          ═══════════════════════════════════════");
+            receipt.AppendLine("                   MATCH POINT GAMING HUB");
+            receipt.AppendLine("          ═══════════════════════════════════════");
             receipt.AppendLine();
             receipt.AppendLine("        RECEIPT PREVIEW");
             receipt.AppendLine();
             receipt.AppendLine($"Date: {DateTime.Now:MM/dd/yyyy hh:mm tt}");
             receipt.AppendLine($"Cashier: {Environment.UserName}");
-            receipt.AppendLine("───────────────────────────────────");
+            receipt.AppendLine("───────────────────────────────────────");
             receipt.AppendLine();
             receipt.AppendLine("TRANSACTION DETAILS");
-            receipt.AppendLine("───────────────────────────────────");
+            receipt.AppendLine("───────────────────────────────────────");
             receipt.AppendLine();
 
-            // Items
-            receipt.AppendLine(string.Format("{0,-18} {1,-8} {2,10}", "Item", "Time", "Amount"));
-            receipt.AppendLine("───────────────────────────────────");
-
-            foreach (ListViewItem item in lvSummary.Items)
+            foreach (var session in _sessions.Values)
             {
-                string gameName = item.Text.Length > 18 ? item.Text.Substring(0, 15) + "..." : item.Text;
-                string time = item.SubItems[1].Text;
-                string amount = item.SubItems[2].Text;
+                string duration;
+                if (session.TotalMinutes >= 60)
+                {
+                    int hours = session.TotalMinutes / 60;
+                    int minutes = session.TotalMinutes % 60;
+                    duration = minutes > 0
+                        ? $"{hours} hr {minutes} min"
+                        : $"{hours} hr";
+                }
+                else
+                {
+                    duration = $"{session.TotalMinutes} min";
+                }
 
-                receipt.AppendLine(string.Format("{0,-18} {1,-8} {2,10}", gameName, time, amount));
+                receipt.AppendLine($"{session.GameName,-20} {duration,-12} ₱{session.TotalPrice,8:N2}");
             }
 
-            receipt.AppendLine("───────────────────────────────────");
+            receipt.AppendLine("───────────────────────────────────────");
             receipt.AppendLine();
-
-            // Totals
-            receipt.AppendLine(string.Format("{0,-25} {1,12}", "Subtotal:", lblSubtotal.Text));
+            receipt.AppendLine($"{"Subtotal:",-30} ₱{subtotalAmount,8:N2}");
 
             if (discountAmount > 0)
             {
                 string discountType = cboDiscountType.SelectedItem?.ToString() ?? "None";
-                receipt.AppendLine(string.Format("{0,-25} {1,12}",
-                    $"Discount ({discountType}):", lblDiscountAmount.Text));
+                receipt.AppendLine($"{$"Discount ({discountType}):",-30} -₱{discountAmount,7:N2}");
             }
 
-            receipt.AppendLine("═══════════════════════════════════");
-            receipt.AppendLine(string.Format("{0,-25} {1,12}", "TOTAL AMOUNT DUE:", lblTotalAmount.Text));
-            receipt.AppendLine("═══════════════════════════════════");
+            receipt.AppendLine("═══════════════════════════════════════");
+            receipt.AppendLine($"{"TOTAL AMOUNT DUE:",-30} ₱{finalAmount,8:N2}");
+            receipt.AppendLine("═══════════════════════════════════════");
             receipt.AppendLine();
 
-            // Payment method
             string paymentMethod = GetSelectedPaymentMethod();
             receipt.AppendLine("PAYMENT METHOD");
-            receipt.AppendLine("───────────────────────────────────");
+            receipt.AppendLine("───────────────────────────────────────");
             receipt.AppendLine($"Payment Type: {paymentMethod}");
 
             if (paymentMethod == "Cash" && !string.IsNullOrEmpty(txtCashReceived.Text))
@@ -636,31 +803,29 @@ namespace KGHCashierPOS
                 receipt.AppendLine($"Reference No: {txtGcashRef.Text}");
             }
 
-            receipt.AppendLine("═══════════════════════════════════");
+            receipt.AppendLine("═══════════════════════════════════════");
             receipt.AppendLine();
             receipt.AppendLine("      Thank you for playing!");
             receipt.AppendLine("      Please visit us again!");
             receipt.AppendLine();
             receipt.AppendLine("This is a PREVIEW only. No payment");
             receipt.AppendLine("has been processed yet.");
-            receipt.AppendLine("═══════════════════════════════════");
+            receipt.AppendLine("═══════════════════════════════════════");
 
             rtbPreview.Text = receipt.ToString();
 
-            // Add close button
             Button btnClose = new Button();
             btnClose.Text = "Close Preview";
             btnClose.Dock = DockStyle.Bottom;
             btnClose.Height = 40;
             btnClose.Click += (s, ev) => previewForm.Close();
 
-            // Add controls to form
             previewForm.Controls.Add(rtbPreview);
             previewForm.Controls.Add(btnClose);
 
-            // Show preview
             previewForm.ShowDialog();
         }
+
 
         // ============ RECEIPT GENERATION ============
         private void GenerateReceiptPDF(
@@ -677,7 +842,7 @@ namespace KGHCashierPOS
             Directory.CreateDirectory(folderPath);
             string filePath = Path.Combine(folderPath, receiptNo + ".pdf");
 
-            Document document = new Document(new Rectangle(226.77f, 566.93f));
+            Document document = new Document(new Rectangle(226.77f, 546.93f));
             PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
             document.SetMargins(10f, 10f, 10f, 10f);
             document.Open();
@@ -729,12 +894,12 @@ namespace KGHCashierPOS
             itemsTable.DefaultCell.Border = Rectangle.NO_BORDER;
             itemsTable.DefaultCell.PaddingBottom = 3f;
 
-            PdfPCell headerCell1 = new PdfPCell(new Phrase("Item", boldFont));
+            PdfPCell headerCell1 = new PdfPCell(new Phrase("Game", boldFont));
             headerCell1.Border = Rectangle.NO_BORDER;
             headerCell1.PaddingBottom = 5f;
             itemsTable.AddCell(headerCell1);
 
-            PdfPCell headerCell2 = new PdfPCell(new Phrase("Time", boldFont));
+            PdfPCell headerCell2 = new PdfPCell(new Phrase("Duration", boldFont));
             headerCell2.Border = Rectangle.NO_BORDER;
             headerCell2.HorizontalAlignment = Element.ALIGN_CENTER;
             headerCell2.PaddingBottom = 5f;
@@ -746,20 +911,24 @@ namespace KGHCashierPOS
             headerCell3.PaddingBottom = 5f;
             itemsTable.AddCell(headerCell3);
 
-            foreach (ListViewItem item in lvSummary.Items)
+            foreach (var session in _sessions.Values)
             {
-                PdfPCell nameCell = new PdfPCell(new Phrase(item.Text, normalFont));
+                string duration = session.TotalMinutes >= 60
+                    ? $"{session.TotalMinutes / 60} hr"
+                    : $"{session.TotalMinutes} min";
+
+                PdfPCell nameCell = new PdfPCell(new Phrase(session.GameName, normalFont));
                 nameCell.Border = Rectangle.NO_BORDER;
                 nameCell.PaddingBottom = 2f;
                 itemsTable.AddCell(nameCell);
 
-                PdfPCell timeCell = new PdfPCell(new Phrase(item.SubItems[1].Text, normalFont));
+                PdfPCell timeCell = new PdfPCell(new Phrase(duration, normalFont));
                 timeCell.Border = Rectangle.NO_BORDER;
                 timeCell.HorizontalAlignment = Element.ALIGN_CENTER;
                 timeCell.PaddingBottom = 2f;
                 itemsTable.AddCell(timeCell);
 
-                PdfPCell amountCell = new PdfPCell(new Phrase(item.SubItems[2].Text, normalFont));
+                PdfPCell amountCell = new PdfPCell(new Phrase("₱" + session.TotalPrice.ToString("N2"), normalFont));
                 amountCell.Border = Rectangle.NO_BORDER;
                 amountCell.HorizontalAlignment = Element.ALIGN_RIGHT;
                 amountCell.PaddingBottom = 2f;
@@ -783,7 +952,6 @@ namespace KGHCashierPOS
             subtotalCell.HorizontalAlignment = Element.ALIGN_RIGHT;
             totalsTable.AddCell(subtotalCell);
 
-            // Show discount if applied
             if (discountAmount > 0)
             {
                 string discountLabel = $"Discount ({cboDiscountType.SelectedItem}):";
@@ -855,82 +1023,9 @@ namespace KGHCashierPOS
             footer.Alignment = Element.ALIGN_CENTER;
             document.Add(footer);
 
-            document.Add(new Paragraph(" "));
-
-            Paragraph powered = new Paragraph("Powered by Match Point POS System", smallFont);
-            powered.Alignment = Element.ALIGN_CENTER;
-            document.Add(powered);
-
             document.Close();
 
             System.Diagnostics.Process.Start(filePath);
         }
-
-        private void btnApplyDiscount_Click(object sender, EventArgs e)
-        {
-            string selectedDiscount = cboDiscountType.SelectedItem?.ToString();
-
-            if (selectedDiscount == null || selectedDiscount == "None")
-            {
-                MessageBox.Show("Please select a discount type first.", "Apply Discount",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-
-            // For promo code - validate
-            if (selectedDiscount == "Promo Code")
-            {
-                if (string.IsNullOrWhiteSpace(txtDiscountAmount.Text))
-                {
-                    MessageBox.Show("Please enter a promo code.", "Apply Discount",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    txtDiscountAmount.Focus();
-                    return;
-                }
-
-                ValidatePromoCode(txtDiscountAmount.Text);
-            }
-            // For custom amount
-            else if (selectedDiscount == "Custom Amount")
-            {
-                if (string.IsNullOrWhiteSpace(txtDiscountAmount.Text))
-                {
-                    MessageBox.Show("Please enter a discount amount.", "Apply Discount",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    txtDiscountAmount.Focus();
-                    return;
-                }
-
-                if (!decimal.TryParse(txtDiscountAmount.Text, out decimal customAmount))
-                {
-                    MessageBox.Show("Please enter a valid amount.", "Apply Discount",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    txtDiscountAmount.Focus();
-                    return;
-                }
-
-                subtotalAmount = CalculateSubtotal();
-
-                if (customAmount > subtotalAmount)
-                {
-                    MessageBox.Show("Discount cannot exceed subtotal amount!", "Invalid Discount",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                discountAmount = customAmount;
-                CalculateTotals();
-
-                MessageBox.Show($"Custom discount of ₱{customAmount:N2} applied!", "Discount Applied",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            // For percentage discounts (already applied on selection)
-            else
-            {
-                MessageBox.Show($"Discount already applied: {lblDiscountAmount.Text}", "Discount Applied",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
     }
 }

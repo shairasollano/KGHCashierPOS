@@ -1,21 +1,9 @@
 ﻿using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace KGHCashierPOS
 {
-
-    using KGHCashierPOS;
     using System;
     using System.Collections.Generic;
-    using System.Data.SqlTypes;
     using System.Windows.Forms;
 
 
@@ -36,20 +24,21 @@ namespace KGHCashierPOS
             { "Badminton", (50, 90) },
             { "Table Tennis", (40, 75) }
             };
-        
+
         private paymentControl1 paymentControl;
-       
+
         public CashierForm()
         {
             InitializeComponent();
 
             paymentControl = new paymentControl1();
             paymentControl.Visible = false;
+            paymentControl.PaymentSuccessful += OnPaymentSuccessful;
 
             this.Controls.Add(paymentControl);
         }
 
-        
+
 
 
 
@@ -59,17 +48,14 @@ namespace KGHCashierPOS
         {
             selectedGame = "Billiards";
         }
-
         private void btnScooter_Click(object sender, EventArgs e)
         {
             selectedGame = "Scooter";
         }
-
         private void btnBadminton_Click(object sender, EventArgs e)
         {
             selectedGame = "Badminton";
         }
-
         private void btnTableTennis_Click(object sender, EventArgs e)
         {
             selectedGame = "Table Tennis";
@@ -81,7 +67,6 @@ namespace KGHCashierPOS
         {
             AddDurationToGame(30);
         }
-
         private void btn1Hour_Click(object sender, EventArgs e)
         {
             AddDurationToGame(60);
@@ -116,7 +101,7 @@ namespace KGHCashierPOS
                     GameName = selectedGame,
                     TotalMinutes = minutes,
                     TotalPrice = priceToAdd,
-                    StartTime = DateTime.Now 
+                    StartTime = DateTime.Now
                 };
             }
 
@@ -136,7 +121,7 @@ namespace KGHCashierPOS
                     session.TotalMinutes >= 60
                     ? $"{session.TotalMinutes / 60} hr"
                     : $"{session.TotalMinutes} min";
-                
+
                 // ADDED TIME 3 MINUTE INCREMENT
 
                 session.StartTime = DateTime.Now.AddMinutes(3);
@@ -198,7 +183,7 @@ namespace KGHCashierPOS
             RefreshListView();
         }
 
-       
+
 
 
         // ORDER NUMBERS KEYPAD, CLEAR, AND ENTER BUTTONS
@@ -216,15 +201,103 @@ namespace KGHCashierPOS
                     txtOrderNumber.Text.Substring(0, txtOrderNumber.Text.Length - 1);
         }
 
+        // ENTER BUTTON TO LOAD ORDER FROM DATABASE UPDATED
         private void btnEnter_Click(object sender, EventArgs e)
         {
-            if (txtOrderNumber.Text == "")
+            string orderNumber = txtOrderNumber.Text.Trim();
+
+            if (string.IsNullOrEmpty(orderNumber))
             {
-                MessageBox.Show("Enter order number.");
+                MessageBox.Show("Please enter an order number!", "No Order Number",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            MessageBox.Show("Order number accepted.");
+            LoadOrderFromDatabase(orderNumber);
+        }
+
+        private void LoadOrderFromDatabase(string orderNumber)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(Database.ConnectionString))
+                {
+                    conn.Open();
+
+                    // Check if order exists
+                    string checkQuery = "SELECT COUNT(*) FROM orders WHERE order_number = @orderNo AND status = 'Pending'";
+                    using (var cmd = new MySqlCommand(checkQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
+                        int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                        if (count == 0)
+                        {
+                            MessageBox.Show("Order not found or already processed!", "Invalid Order",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+                    }
+
+                    // Load order items
+                    string itemsQuery = @"
+                SELECT game_name, duration_minutes, price 
+                FROM order_items 
+                WHERE order_number = @orderNo";
+
+                    using (var cmd = new MySqlCommand(itemsQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            // Clear existing items
+                            lvSelectedGames.Items.Clear();
+
+                            while (reader.Read())
+                            {
+                                string gameName = reader.GetString("game_name");
+                                int duration = reader.GetInt32("duration_minutes");
+                                decimal price = reader.GetDecimal("price");
+
+                                // Add to ListView
+                                ListViewItem item = new ListViewItem(gameName);
+                                item.SubItems.Add(duration >= 60 ? $"{duration / 60} hr" : $"{duration} min");
+                                item.SubItems.Add("₱" + price.ToString("N2"));
+
+                                lvSelectedGames.Items.Add(item);
+                            }
+                        }
+                    }
+
+                    // Calculate and update total
+                    UpdateTotalAmount();
+
+                    MessageBox.Show($"Order {orderNumber} loaded successfully!", "Order Loaded",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading order: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void UpdateTotalAmount()
+        {
+            decimal total = 0;
+
+            foreach (ListViewItem item in lvSelectedGames.Items)
+            {
+                string priceText = item.SubItems[2].Text.Replace("₱", "").Trim();
+                if (decimal.TryParse(priceText, out decimal price))
+                {
+                    total += price;
+                }
+            }
+
+            lblTotal.Text = "₱" + total.ToString("N2");
         }
 
         // PROCEED TO PAYMENT
@@ -243,11 +316,26 @@ namespace KGHCashierPOS
             paymentControl.LoadPaymentData(activeSessions, totalAmount);
             paymentControl.Visible = true;
             paymentControl.BringToFront();
+            
         }
+
+        private void OnPaymentSuccessful()
+        {
+            ResetTransaction();
+        }
+
+
+
+
+        /* OrderForm orderForm = new OrderForm();
+            orderForm.ShowDialog(); 
+        
+         paymentControl1 : UserControl*/
 
         public void ClosePayment()
         {
             paymentControl.Visible = false;
+            
         }
 
 
@@ -264,40 +352,21 @@ namespace KGHCashierPOS
         // DATABASE CONNECTION TEST
         private void CashierForm_Load(object sender, EventArgs e)
         {
-            TestDatabaseConnection();
-            UpdateDateTime();        // show immediately
-            timerDateTime.Start();   // start live update
+           
+            UpdateDateTime();        
+            timerDateTime.Start();   
         }
 
 
-
-        private void TestDatabaseConnection()
-        {
-            using (MySqlConnection conn =
-                new MySqlConnection(Database.ConnectionString))
-            {
-                try
-                {
-                    conn.Open();
-                    MessageBox.Show("Database connected successfully!");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Database error:\n" + ex.Message);
-                }
-            }
-        }
-
-
-         private void timerDateTime_Tick(object sender, EventArgs e)
+        private void timerDateTime_Tick(object sender, EventArgs e)
         {
             UpdateDateTime();
         }
 
         private void UpdateDateTime()
         {
-            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy"); // August 12, 2026
-            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   // 09:45:12 PM
+            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy"); 
+            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   
         }
 
 
@@ -317,7 +386,19 @@ namespace KGHCashierPOS
         {
             ResetTransaction();
         }
+        
+        
+        // ========= ORDER FORM INTERACTION METHODS =========
+        private void btnNewOrder_Click(object sender, EventArgs e)
+        {
+            OrderForm orderForm = new OrderForm();
+            orderForm.ShowDialog();
+        }
 
-       
+        
+
+
+
+
     }
 }
