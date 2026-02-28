@@ -73,7 +73,6 @@
             this.Rate = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.StartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.EndTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.SubTotal = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnClearCashierForm = new System.Windows.Forms.Button();
             this.timerDateTime = new System.Windows.Forms.Timer(this.components);
             this.paymentControl1 = new KGHCashierPOS.paymentControl1();
@@ -93,9 +92,10 @@
             this.panel1.Controls.Add(this.pictureBox1);
             this.panel1.Controls.Add(this.label4);
             this.panel1.Controls.Add(this.label3);
-            this.panel1.Location = new System.Drawing.Point(-1, 0);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1289, 71);
+            this.panel1.Size = new System.Drawing.Size(1252, 71);
             this.panel1.TabIndex = 0;
             // 
             // lblUser
@@ -284,7 +284,6 @@
             this.chkExtend.Text = "Extend Session";
             this.chkExtend.UseVisualStyleBackColor = true;
             this.chkExtend.Visible = false;
-            this.chkExtend.Click += new System.EventHandler(this.chkExtend_CheckedChanged);
             // 
             // btn30min
             // 
@@ -551,8 +550,7 @@
             this.Duration,
             this.Rate,
             this.StartTime,
-            this.EndTime,
-            this.SubTotal});
+            this.EndTime});
             this.lvSelectedGames.FullRowSelect = true;
             this.lvSelectedGames.GridLines = true;
             this.lvSelectedGames.HideSelection = false;
@@ -588,11 +586,6 @@
             // 
             this.EndTime.Text = "End Time";
             this.EndTime.Width = 100;
-            // 
-            // SubTotal
-            // 
-            this.SubTotal.Text = "Sub Total";
-            this.SubTotal.Width = 100;
             // 
             // btnClearCashierForm
             // 
@@ -653,8 +646,9 @@
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.paymentControl1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "CashierForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Load += new System.EventHandler(this.CashierForm_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -710,7 +704,6 @@
         private System.Windows.Forms.ColumnHeader Rate;
         private System.Windows.Forms.ColumnHeader StartTime;
         private System.Windows.Forms.ColumnHeader EndTime;
-        private System.Windows.Forms.ColumnHeader SubTotal;
         private System.Windows.Forms.Label lblUser;
         private System.Windows.Forms.Button btnClearCashierForm;
         private paymentControl1 paymentControl1;

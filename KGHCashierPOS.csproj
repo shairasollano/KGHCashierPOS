@@ -185,6 +185,12 @@
       <DependentUpon>extratodelete.cs</DependentUpon>
     </Compile>
     <Compile Include="GameSession.cs" />
+    <Compile Include="NumericKeyboardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="NumericKeyboardControl.Designer.cs">
+      <DependentUpon>NumericKeyboardControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="OrderForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -209,6 +215,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="extratodelete.resx">
       <DependentUpon>extratodelete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NumericKeyboardControl.resx">
+      <DependentUpon>NumericKeyboardControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OrderForm.resx">
       <DependentUpon>OrderForm.cs</DependentUpon>

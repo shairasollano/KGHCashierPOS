@@ -54,10 +54,10 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -67,19 +67,20 @@
             // lblSubtotal
             // 
             this.lblSubtotal.AutoSize = true;
-            this.lblSubtotal.Location = new System.Drawing.Point(109, 22);
+            this.lblSubtotal.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSubtotal.Location = new System.Drawing.Point(103, 13);
             this.lblSubtotal.Name = "lblSubtotal";
-            this.lblSubtotal.Size = new System.Drawing.Size(84, 20);
+            this.lblSubtotal.Size = new System.Drawing.Size(116, 30);
             this.lblSubtotal.TabIndex = 70;
             this.lblSubtotal.Text = "lblSubtotal";
             // 
             // lblPaymentTitle
             // 
             this.lblPaymentTitle.AutoSize = true;
-            this.lblPaymentTitle.Font = new System.Drawing.Font("Modern No. 20", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblPaymentTitle.Location = new System.Drawing.Point(18, 20);
+            this.lblPaymentTitle.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPaymentTitle.Location = new System.Drawing.Point(12, 11);
             this.lblPaymentTitle.Name = "lblPaymentTitle";
-            this.lblPaymentTitle.Size = new System.Drawing.Size(96, 22);
+            this.lblPaymentTitle.Size = new System.Drawing.Size(104, 30);
             this.lblPaymentTitle.TabIndex = 71;
             this.lblPaymentTitle.Text = "Subtotal: ";
             // 
@@ -87,17 +88,18 @@
             // 
             this.txtCashReceived.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtCashReceived.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
-            this.txtCashReceived.Location = new System.Drawing.Point(74, 288);
+            this.txtCashReceived.Location = new System.Drawing.Point(150, 258);
             this.txtCashReceived.Name = "txtCashReceived";
             this.txtCashReceived.Size = new System.Drawing.Size(258, 44);
             this.txtCashReceived.TabIndex = 72;
+            this.txtCashReceived.TextChanged += new System.EventHandler(this.txtCashReceived_TextChanged);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.Control;
-            this.label1.Location = new System.Drawing.Point(70, 257);
+            this.label1.Location = new System.Drawing.Point(150, 224);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(146, 28);
             this.label1.TabIndex = 73;
@@ -107,8 +109,8 @@
             // 
             this.lblChange.AutoSize = true;
             this.lblChange.Font = new System.Drawing.Font("Nirmala Text", 10F);
-            this.lblChange.ForeColor = System.Drawing.SystemColors.Control;
-            this.lblChange.Location = new System.Drawing.Point(173, 351);
+            this.lblChange.ForeColor = System.Drawing.Color.Red;
+            this.lblChange.Location = new System.Drawing.Point(227, 324);
             this.lblChange.Name = "lblChange";
             this.lblChange.Size = new System.Drawing.Size(100, 28);
             this.lblChange.TabIndex = 74;
@@ -119,7 +121,7 @@
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.ForeColor = System.Drawing.SystemColors.Control;
-            this.label2.Location = new System.Drawing.Point(74, 351);
+            this.label2.Location = new System.Drawing.Point(150, 324);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(93, 28);
             this.label2.TabIndex = 75;
@@ -130,7 +132,7 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.SystemColors.Control;
-            this.label3.Location = new System.Drawing.Point(70, 467);
+            this.label3.Location = new System.Drawing.Point(151, 394);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(251, 28);
             this.label3.TabIndex = 76;
@@ -140,19 +142,20 @@
             // 
             this.txtGcashRef.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtGcashRef.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
-            this.txtGcashRef.Location = new System.Drawing.Point(74, 498);
+            this.txtGcashRef.Location = new System.Drawing.Point(155, 425);
             this.txtGcashRef.Name = "txtGcashRef";
             this.txtGcashRef.Size = new System.Drawing.Size(258, 44);
             this.txtGcashRef.TabIndex = 77;
+            this.txtGcashRef.TextChanged += new System.EventHandler(this.txtGcashRef_TextChanged);
             // 
             // btnCancel
             // 
             this.btnCancel.BackColor = System.Drawing.Color.Crimson;
             this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCancel.Font = new System.Drawing.Font("Nirmala Text", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnCancel.Location = new System.Drawing.Point(412, 405);
+            this.btnCancel.Location = new System.Drawing.Point(468, 368);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(258, 54);
+            this.btnCancel.Size = new System.Drawing.Size(277, 61);
             this.btnCancel.TabIndex = 98;
             this.btnCancel.Text = "CANCEL";
             this.btnCancel.UseVisualStyleBackColor = false;
@@ -163,9 +166,9 @@
             this.btnConfirmPayment.BackColor = System.Drawing.Color.LimeGreen;
             this.btnConfirmPayment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnConfirmPayment.Font = new System.Drawing.Font("Nirmala Text", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnConfirmPayment.Location = new System.Drawing.Point(412, 345);
+            this.btnConfirmPayment.Location = new System.Drawing.Point(468, 301);
             this.btnConfirmPayment.Name = "btnConfirmPayment";
-            this.btnConfirmPayment.Size = new System.Drawing.Size(258, 54);
+            this.btnConfirmPayment.Size = new System.Drawing.Size(277, 61);
             this.btnConfirmPayment.TabIndex = 96;
             this.btnConfirmPayment.Text = "PROCESS PAYMENT";
             this.btnConfirmPayment.UseVisualStyleBackColor = false;
@@ -180,82 +183,85 @@
             "PWD",
             "Senior",
             "Promo Code"});
-            this.cboDiscountType.Location = new System.Drawing.Point(412, 162);
+            this.cboDiscountType.Location = new System.Drawing.Point(468, 116);
             this.cboDiscountType.Name = "cboDiscountType";
-            this.cboDiscountType.Size = new System.Drawing.Size(208, 40);
+            this.cboDiscountType.Size = new System.Drawing.Size(168, 40);
             this.cboDiscountType.TabIndex = 99;
             // 
             // lblDiscountTitle
             // 
             this.lblDiscountTitle.AutoSize = true;
-            this.lblDiscountTitle.Font = new System.Drawing.Font("Mongolian Baiti", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDiscountTitle.Location = new System.Drawing.Point(18, 52);
+            this.lblDiscountTitle.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDiscountTitle.Location = new System.Drawing.Point(12, 43);
             this.lblDiscountTitle.Name = "lblDiscountTitle";
-            this.lblDiscountTitle.Size = new System.Drawing.Size(104, 21);
+            this.lblDiscountTitle.Size = new System.Drawing.Size(107, 30);
             this.lblDiscountTitle.TabIndex = 101;
             this.lblDiscountTitle.Text = "Discount: ";
             // 
             // lblTotalAmountTitle
             // 
             this.lblTotalAmountTitle.AutoSize = true;
-            this.lblTotalAmountTitle.Font = new System.Drawing.Font("Mongolian Baiti", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTotalAmountTitle.Location = new System.Drawing.Point(18, 85);
+            this.lblTotalAmountTitle.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTotalAmountTitle.Location = new System.Drawing.Point(12, 76);
             this.lblTotalAmountTitle.Name = "lblTotalAmountTitle";
-            this.lblTotalAmountTitle.Size = new System.Drawing.Size(170, 19);
+            this.lblTotalAmountTitle.Size = new System.Drawing.Size(179, 30);
             this.lblTotalAmountTitle.TabIndex = 103;
             this.lblTotalAmountTitle.Text = "TOTAL AMOUNT:";
             // 
             // lblTotalAmount
             // 
             this.lblTotalAmount.AutoSize = true;
-            this.lblTotalAmount.Location = new System.Drawing.Point(183, 85);
+            this.lblTotalAmount.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTotalAmount.Location = new System.Drawing.Point(177, 76);
             this.lblTotalAmount.Name = "lblTotalAmount";
-            this.lblTotalAmount.Size = new System.Drawing.Size(94, 20);
+            this.lblTotalAmount.Size = new System.Drawing.Size(130, 30);
             this.lblTotalAmount.TabIndex = 104;
             this.lblTotalAmount.Text = "finalAmount";
             // 
             // rbCash
             // 
             this.rbCash.AutoSize = true;
-            this.rbCash.Font = new System.Drawing.Font("Mongolian Baiti", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rbCash.Location = new System.Drawing.Point(29, 47);
+            this.rbCash.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rbCash.Location = new System.Drawing.Point(176, 29);
             this.rbCash.Name = "rbCash";
-            this.rbCash.Size = new System.Drawing.Size(80, 28);
+            this.rbCash.Size = new System.Drawing.Size(84, 34);
             this.rbCash.TabIndex = 105;
             this.rbCash.TabStop = true;
             this.rbCash.Text = "Cash";
             this.rbCash.UseVisualStyleBackColor = true;
+            this.rbCash.CheckedChanged += new System.EventHandler(this.rbCash_CheckedChanged);
             // 
             // rbGCash
             // 
             this.rbGCash.AutoSize = true;
-            this.rbGCash.Font = new System.Drawing.Font("Mongolian Baiti", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rbGCash.Location = new System.Drawing.Point(29, 77);
+            this.rbGCash.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rbGCash.Location = new System.Drawing.Point(176, 63);
             this.rbGCash.Name = "rbGCash";
-            this.rbGCash.Size = new System.Drawing.Size(103, 28);
+            this.rbGCash.Size = new System.Drawing.Size(108, 34);
             this.rbGCash.TabIndex = 106;
             this.rbGCash.TabStop = true;
             this.rbGCash.Text = "G-Cash";
             this.rbGCash.UseVisualStyleBackColor = true;
+            this.rbGCash.CheckedChanged += new System.EventHandler(this.rbGCash_CheckedChanged);
             // 
             // lblPaymentMethodTitle
             // 
             this.lblPaymentMethodTitle.AutoSize = true;
-            this.lblPaymentMethodTitle.Font = new System.Drawing.Font("Mongolian Baiti", 10F);
-            this.lblPaymentMethodTitle.Location = new System.Drawing.Point(25, 14);
+            this.lblPaymentMethodTitle.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPaymentMethodTitle.Location = new System.Drawing.Point(38, 19);
             this.lblPaymentMethodTitle.Name = "lblPaymentMethodTitle";
-            this.lblPaymentMethodTitle.Size = new System.Drawing.Size(204, 21);
+            this.lblPaymentMethodTitle.Size = new System.Drawing.Size(100, 84);
             this.lblPaymentMethodTitle.TabIndex = 107;
-            this.lblPaymentMethodTitle.Text = "Select Payment Method";
+            this.lblPaymentMethodTitle.Text = "Select \r\nPayment \r\nMethod";
             // 
             // btnPreviewReceipt
             // 
             this.btnPreviewReceipt.BackColor = System.Drawing.Color.SkyBlue;
             this.btnPreviewReceipt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnPreviewReceipt.Font = new System.Drawing.Font("Nirmala Text", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnPreviewReceipt.Location = new System.Drawing.Point(412, 465);
+            this.btnPreviewReceipt.Location = new System.Drawing.Point(468, 436);
             this.btnPreviewReceipt.Name = "btnPreviewReceipt";
-            this.btnPreviewReceipt.Size = new System.Drawing.Size(258, 54);
+            this.btnPreviewReceipt.Size = new System.Drawing.Size(277, 61);
             this.btnPreviewReceipt.TabIndex = 108;
             this.btnPreviewReceipt.Text = "PREVIEW RECEIPT";
             this.btnPreviewReceipt.UseVisualStyleBackColor = false;
@@ -265,9 +271,9 @@
             // 
             this.txtDiscountAmount.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtDiscountAmount.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
-            this.txtDiscountAmount.Location = new System.Drawing.Point(412, 256);
+            this.txtDiscountAmount.Location = new System.Drawing.Point(468, 200);
             this.txtDiscountAmount.Name = "txtDiscountAmount";
-            this.txtDiscountAmount.Size = new System.Drawing.Size(258, 44);
+            this.txtDiscountAmount.Size = new System.Drawing.Size(218, 44);
             this.txtDiscountAmount.TabIndex = 109;
             // 
             // btnApplyDiscount
@@ -275,9 +281,9 @@
             this.btnApplyDiscount.BackColor = System.Drawing.Color.Gold;
             this.btnApplyDiscount.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnApplyDiscount.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnApplyDiscount.Location = new System.Drawing.Point(626, 162);
+            this.btnApplyDiscount.Location = new System.Drawing.Point(647, 116);
             this.btnApplyDiscount.Name = "btnApplyDiscount";
-            this.btnApplyDiscount.Size = new System.Drawing.Size(143, 40);
+            this.btnApplyDiscount.Size = new System.Drawing.Size(128, 40);
             this.btnApplyDiscount.TabIndex = 110;
             this.btnApplyDiscount.Text = "Apply Discount";
             this.btnApplyDiscount.UseVisualStyleBackColor = false;
@@ -286,9 +292,10 @@
             // lblDiscountAmount
             // 
             this.lblDiscountAmount.AutoSize = true;
-            this.lblDiscountAmount.Location = new System.Drawing.Point(116, 52);
+            this.lblDiscountAmount.Font = new System.Drawing.Font("Nirmala UI", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDiscountAmount.Location = new System.Drawing.Point(110, 43);
             this.lblDiscountAmount.Name = "lblDiscountAmount";
-            this.lblDiscountAmount.Size = new System.Drawing.Size(69, 20);
+            this.lblDiscountAmount.Size = new System.Drawing.Size(94, 30);
             this.lblDiscountAmount.TabIndex = 111;
             this.lblDiscountAmount.Text = "discount";
             // 
@@ -308,7 +315,7 @@
             this.panel1.Controls.Add(this.rtbSummary);
             this.panel1.Location = new System.Drawing.Point(24, 24);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(379, 644);
+            this.panel1.Size = new System.Drawing.Size(379, 612);
             this.panel1.TabIndex = 113;
             // 
             // panel2
@@ -320,9 +327,9 @@
             this.panel2.Controls.Add(this.lblTotalAmountTitle);
             this.panel2.Controls.Add(this.lblTotalAmount);
             this.panel2.Controls.Add(this.lblDiscountTitle);
-            this.panel2.Location = new System.Drawing.Point(35, 500);
+            this.panel2.Location = new System.Drawing.Point(35, 482);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(307, 124);
+            this.panel2.Size = new System.Drawing.Size(307, 117);
             this.panel2.TabIndex = 114;
             // 
             // panel3
@@ -331,14 +338,15 @@
             this.panel3.Controls.Add(this.rbCash);
             this.panel3.Controls.Add(this.rbGCash);
             this.panel3.Controls.Add(this.lblPaymentMethodTitle);
-            this.panel3.Location = new System.Drawing.Point(74, 50);
+            this.panel3.Location = new System.Drawing.Point(48, 53);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(269, 124);
+            this.panel3.Size = new System.Drawing.Size(360, 124);
             this.panel3.TabIndex = 115;
             // 
             // panel4
             // 
             this.panel4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.panel4.Controls.Add(this.lblChange);
             this.panel4.Controls.Add(this.label7);
             this.panel4.Controls.Add(this.txtDiscountAmount);
             this.panel4.Controls.Add(this.label6);
@@ -353,57 +361,56 @@
             this.panel4.Controls.Add(this.btnConfirmPayment);
             this.panel4.Controls.Add(this.txtCashReceived);
             this.panel4.Controls.Add(this.label2);
-            this.panel4.Controls.Add(this.lblChange);
             this.panel4.Controls.Add(this.label3);
             this.panel4.Controls.Add(this.txtGcashRef);
             this.panel4.Location = new System.Drawing.Point(433, 24);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(809, 644);
+            this.panel4.Size = new System.Drawing.Size(809, 612);
             this.panel4.TabIndex = 115;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.ForeColor = System.Drawing.SystemColors.Control;
-            this.label4.Location = new System.Drawing.Point(70, 222);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(149, 21);
-            this.label4.TabIndex = 111;
-            this.label4.Text = "For Cash Payment:";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.ForeColor = System.Drawing.SystemColors.Control;
-            this.label5.Location = new System.Drawing.Point(70, 424);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(166, 21);
-            this.label5.TabIndex = 116;
-            this.label5.Text = "For G-Cash Payment:";
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.ForeColor = System.Drawing.SystemColors.Control;
-            this.label6.Location = new System.Drawing.Point(408, 132);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(110, 21);
-            this.label6.TabIndex = 117;
-            this.label6.Text = "For Discount:";
             // 
             // label7
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.ForeColor = System.Drawing.SystemColors.Control;
-            this.label7.Location = new System.Drawing.Point(408, 232);
+            this.label7.Location = new System.Drawing.Point(464, 176);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(231, 21);
             this.label7.TabIndex = 118;
             this.label7.Text = "Enter Promo Code (Optional)";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.ForeColor = System.Drawing.SystemColors.Control;
+            this.label6.Location = new System.Drawing.Point(464, 92);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(110, 21);
+            this.label6.TabIndex = 117;
+            this.label6.Text = "For Discount:";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.ForeColor = System.Drawing.SystemColors.Control;
+            this.label5.Location = new System.Drawing.Point(44, 409);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(95, 42);
+            this.label5.TabIndex = 116;
+            this.label5.Text = "For G-Cash \r\nPayment:";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.ForeColor = System.Drawing.SystemColors.Control;
+            this.label4.Location = new System.Drawing.Point(44, 258);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(81, 42);
+            this.label4.TabIndex = 111;
+            this.label4.Text = "For Cash \r\nPayment:";
             // 
             // paymentControl1
             // 
@@ -414,7 +421,7 @@
             this.Location = new System.Drawing.Point(0, 20);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "paymentControl1";
-            this.Size = new System.Drawing.Size(1278, 700);
+            this.Size = new System.Drawing.Size(1278, 650);
             this.Load += new System.EventHandler(this.PaymentControl1_Load);
             this.panel1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);

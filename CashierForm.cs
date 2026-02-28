@@ -2,8 +2,10 @@
 
 namespace KGHCashierPOS
 {
+    using MySqlX.XDevAPI;
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Windows.Forms;
 
 
@@ -128,15 +130,6 @@ namespace KGHCashierPOS
                 session.EndTime = session.StartTime.AddMinutes(session.TotalMinutes);
                 session.IsActive = true;
 
-                // If session is paused, calculate remaining time and update end time
-                session.RemainingTime = session.EndTime - DateTime.Now;
-                session.IsPaused = true;
-
-                // When resuming, set new end time based on remaining time
-                session.EndTime = DateTime.Now.Add(session.RemainingTime);
-                session.IsPaused = false;
-
-
                 ListViewItem item = new ListViewItem(session.GameName);
                 item.SubItems.Add(durationText);
                 item.SubItems.Add("₱" + session.TotalPrice.ToString("0.00"));
@@ -153,24 +146,6 @@ namespace KGHCashierPOS
         }
 
 
-        // TIMER TICK EVENT TO CHECK FOR SESSION END
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            foreach (var s in activeSessions.Values)
-            {
-                if (!s.IsActive) continue;
-
-                TimeSpan remaining = s.EndTime - DateTime.Now;
-
-                if (remaining.TotalSeconds <= 0)
-                {
-                    s.IsActive = false;
-                    MessageBox.Show($"{s.GameName} session ended!");
-                }
-            }
-        }
-
-
         // REMOVE SELECTED GAME
         private void btnRemoveGame_Click(object sender, EventArgs e)
         {
@@ -183,10 +158,7 @@ namespace KGHCashierPOS
             RefreshListView();
         }
 
-
-
-
-        // ORDER NUMBERS KEYPAD, CLEAR, AND ENTER BUTTONS
+        // FUNCTIONS NG BUTTONS SA ORDER KEYPAD
 
         private void NumberButton_Click(object sender, EventArgs e)
         {
@@ -210,9 +182,32 @@ namespace KGHCashierPOS
             {
                 MessageBox.Show("Please enter an order number!", "No Order Number",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtOrderNumber.Focus();
                 return;
             }
 
+            // Remove any non-numeric characters
+            orderNumber = new string(orderNumber.Where(char.IsDigit).ToArray());
+
+            if (string.IsNullOrEmpty(orderNumber))
+            {
+                MessageBox.Show("Invalid order number format!", "Invalid Input",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtOrderNumber.Clear();
+                txtOrderNumber.Focus();
+                return;
+            }
+
+            // Pad with leading zeros if user typed shorter number
+            if (orderNumber.Length < 6)
+            {
+                orderNumber = orderNumber.PadLeft(6, '0');
+            }
+
+            // Update textbox to show formatted number
+            txtOrderNumber.Text = orderNumber;
+
+            // Load the order
             LoadOrderFromDatabase(orderNumber);
         }
 
@@ -224,8 +219,12 @@ namespace KGHCashierPOS
                 {
                     conn.Open();
 
-                    // Check if order exists
-                    string checkQuery = "SELECT COUNT(*) FROM orders WHERE order_number = @orderNo AND status = 'Pending'";
+                    // Check if order exists and is pending
+                    string checkQuery = @"
+                SELECT COUNT(*) 
+                FROM orders 
+                WHERE order_number = @orderNo AND status = 'Pending'";
+
                     using (var cmd = new MySqlCommand(checkQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@orderNo", orderNumber);
@@ -233,8 +232,13 @@ namespace KGHCashierPOS
 
                         if (count == 0)
                         {
-                            MessageBox.Show("Order not found or already processed!", "Invalid Order",
-                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show(
+                                $"Order #{orderNumber} not found or already processed!",
+                                "Invalid Order",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                            txtOrderNumber.Clear();
+                            txtOrderNumber.Focus();
                             return;
                         }
                     }
@@ -254,6 +258,7 @@ namespace KGHCashierPOS
                             // Clear existing items
                             lvSelectedGames.Items.Clear();
 
+                            int itemCount = 0;
                             while (reader.Read())
                             {
                                 string gameName = reader.GetString("game_name");
@@ -266,15 +271,24 @@ namespace KGHCashierPOS
                                 item.SubItems.Add("₱" + price.ToString("N2"));
 
                                 lvSelectedGames.Items.Add(item);
+                                itemCount++;
+                            }
+
+                            if (itemCount > 0)
+                            {
+                                // Calculate and update total
+                                UpdateTotalAmount();
+
+                                MessageBox.Show(
+                                    $"Order #{orderNumber} loaded successfully!\n" +
+                                    $"Items: {itemCount}\n" +
+                                    $"Total: {lblTotal.Text}",
+                                    "Order Loaded",
+                                    MessageBoxButtons.OK,
+                                    MessageBoxIcon.Information);
                             }
                         }
                     }
-
-                    // Calculate and update total
-                    UpdateTotalAmount();
-
-                    MessageBox.Show($"Order {orderNumber} loaded successfully!", "Order Loaded",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -290,7 +304,7 @@ namespace KGHCashierPOS
 
             foreach (ListViewItem item in lvSelectedGames.Items)
             {
-                string priceText = item.SubItems[2].Text.Replace("₱", "").Trim();
+                string priceText = item.SubItems[2].Text.Replace("₱", "").Replace(",", "").Trim();
                 if (decimal.TryParse(priceText, out decimal price))
                 {
                     total += price;
@@ -302,30 +316,127 @@ namespace KGHCashierPOS
 
         // PROCEED TO PAYMENT
 
-        private void btnProceedPayment_Click(object sender, EventArgs e)
+       private void btnProceedPayment_Click(object sender, EventArgs e)
+{
+    // Validate that there are items
+    if (lvSelectedGames.Items.Count == 0)
+    {
+        MessageBox.Show("Please add games to the order first!", "No Items",
+            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        return;
+    }
+
+    // Create GameSession dictionary from ListView
+    Dictionary<string, GameSession> sessions = new Dictionary<string, GameSession>();
+    decimal total = 0;
+    int sessionCounter = 1;
+
+            foreach(ListViewItem item in lvSelectedGames.Items)
+{
+                // Parse the ListView data
+                string gameName = item.Text;
+                string durationText = item.SubItems[1].Text;
+                string priceText = item.SubItems[2].Text;
+
+                // Parse duration - FIXED VERSION
+                int totalMinutes = 0;
+
+                if (durationText.Contains("hr"))
+                {
+                    // Declare hourIndex here
+                    int hrIndex = durationText.IndexOf("hr");
+                    string hourPart = durationText.Substring(0, hrIndex).Trim();
+
+                    if (int.TryParse(hourPart, out int hours))
+                    {
+                        totalMinutes += hours * 60;
+                    }
+
+                    // Check for minutes in the SAME if block
+                    if (durationText.Contains("min"))
+                    {
+                        string afterHr = durationText.Substring(hrIndex + 2);
+                        string minPart = afterHr.Replace("min", "").Trim();
+
+                        if (int.TryParse(minPart, out int minutes))
+                        {
+                            totalMinutes += minutes;
+                        }
+                    }
+                }
+                else if (durationText.Contains("min"))
+                {
+                    // Only minutes, no hours
+                    string minPart = durationText.Replace("min", "").Trim();
+                    if (int.TryParse(minPart, out int minutes))
+                    {
+                        totalMinutes = minutes;
+                    }
+                }
+
+                // Parse price
+                decimal price = 0;
+        if (priceText.StartsWith("₱"))
         {
-
-            // Validate that there are items in the summary
-            if (lvSelectedGames.Items.Count == 0)
-            {
-                MessageBox.Show("Please add games to the order first!", "No Items",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            paymentControl.LoadPaymentData(activeSessions, totalAmount);
-            paymentControl.Visible = true;
-            paymentControl.BringToFront();
-            
+            string cleanPrice = priceText.Replace("₱", "").Replace(",", "").Trim();
+            decimal.TryParse(cleanPrice, out price);
         }
 
+        // Create GameSession
+        GameSession session = new GameSession
+        {
+            GameName = gameName,
+            //
+            StartTime = DateTime.Now, // You might want to store actual start time
+            EndTime = DateTime.Now.AddMinutes(totalMinutes),
+            TotalMinutes = totalMinutes,
+            TotalPrice = price,
+            //
+        };
+
+        sessions.Add($"session_{sessionCounter}", session);
+        total += price;
+        sessionCounter++;
+        }
+
+
+
+        // Validate sessions were created
+        if (sessions.Count == 0)
+        {
+            MessageBox.Show("Error creating payment sessions!", "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+
+        // Show payment control
+        paymentControl1.Visible = true;
+        paymentControl1.BringToFront();
+
+        // Load payment data
+        paymentControl1.LoadPaymentData(sessions, total);
+
+    
+        }
+
+        private void ResetTransaction()
+        {
+            txtOrderNumber.Clear();
+            lvSelectedGames.Items.Clear();
+            lblTotal.Text = "₱0.00";
+
+            activeSessions.Clear();
+            totalAmount = 0;
+
+        }
+        private void btnClearCashierForm_Click_1(object sender, EventArgs e)
+        {
+            ResetTransaction();
+        }
         private void OnPaymentSuccessful()
         {
             ResetTransaction();
         }
-
-
-
 
         /* OrderForm orderForm = new OrderForm();
             orderForm.ShowDialog(); 
@@ -338,21 +449,8 @@ namespace KGHCashierPOS
             
         }
 
-
-
-        // EXTEND SESSION
-
-        private void chkExtend_CheckedChanged(object sender, EventArgs e)
-        {
-            if (chkExtend.Checked)
-                MessageBox.Show("Extension enabled.");
-        }
-
-
-        // DATABASE CONNECTION TEST
         private void CashierForm_Load(object sender, EventArgs e)
         {
-           
             UpdateDateTime();        
             timerDateTime.Start();   
         }
@@ -369,36 +467,10 @@ namespace KGHCashierPOS
             lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   
         }
 
-
-        private void ResetTransaction()
+        private void chkExtend_CheckedChanged(object sender, EventArgs e)
         {
-            txtOrderNumber.Clear();
-            lvSelectedGames.Items.Clear();
-            lblTotal.Text = "₱0.00";
 
-            activeSessions.Clear();
-            totalAmount = 0;
-
-            btnProceedPayment.Enabled = false;
         }
-
-        private void btnClearCashierForm_Click_1(object sender, EventArgs e)
-        {
-            ResetTransaction();
-        }
-        
-        
-        // ========= ORDER FORM INTERACTION METHODS =========
-        private void btnNewOrder_Click(object sender, EventArgs e)
-        {
-            OrderForm orderForm = new OrderForm();
-            orderForm.ShowDialog();
-        }
-
-        
-
-
-
 
     }
 }

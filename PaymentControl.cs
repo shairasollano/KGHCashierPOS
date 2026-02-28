@@ -1,12 +1,13 @@
-﻿using System;
+﻿using iTextSharp.text;
+using iTextSharp.text.pdf;
+using KGHCashierPOS;
+using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using MySql.Data.MySqlClient;
-using KGHCashierPOS;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
 
 namespace KGHCashierPOS
 {
@@ -18,13 +19,15 @@ namespace KGHCashierPOS
         private decimal discountAmount = 0;
         private decimal subtotalAmount = 0;
         private decimal finalAmount = 0;
+        private bool isPaymentMethodValid = false;
 
         // ============ CONSTRUCTOR ============
         public paymentControl1()
         {
             InitializeComponent();
-            InitializeRichTextBox();  // NEW
+            InitializeRichTextBox(); 
             InitializeDiscountComboBox();
+            InitializePaymentValidation();
         }
 
         private void PaymentControl1_Load(object sender, EventArgs e)
@@ -33,6 +36,100 @@ namespace KGHCashierPOS
         }
 
         public event Action PaymentSuccessful;
+
+        private void InitializePaymentValidation()
+        {
+            // Set Cash as default
+            rbCash.Checked = true;
+            rbGCash.Checked = false;
+
+            // Hide GCash fields initially 
+            txtGcashRef.Visible = false;
+            txtGcashRef.Enabled = false;
+
+            // Show cash fields
+            txtCashReceived.Visible = true;
+            txtCashReceived.Enabled = true;
+            lblChange.Visible = true;
+
+            // Disable confirm button initially
+            btnConfirmPayment.Enabled = false;
+
+        }
+
+
+        // ============ LOAD PAYMENT DATA ============
+        public void LoadPaymentData(Dictionary<string, GameSession> sessions, decimal total)
+        {
+            _sessions = sessions;
+            _totalAmount = total;
+
+            // Reset discount
+            discountAmount = 0;
+            cboDiscountType.SelectedIndex = 0;
+            txtDiscountAmount.Clear();
+            txtDiscountAmount.Enabled = false;
+
+            // Build transaction summary
+            rtbSummary.Clear();
+            StringBuilder summary = new StringBuilder();
+
+            summary.AppendLine("        ════════════════════════════════════════════════");
+            summary.AppendLine("            TRANSACTION DETAILS");
+            summary.AppendLine("        ════════════════════════════════════════════════");
+            summary.AppendLine();
+
+            foreach (var session in sessions.Values)
+            {
+                string duration;
+                if (session.TotalMinutes >= 60)
+                {
+                    int hours = session.TotalMinutes / 60;
+                    int minutes = session.TotalMinutes % 60;
+                    duration = minutes > 0
+                        ? $"{hours} hours {minutes} minutes"
+                        : $"{hours} hour" + (hours > 1 ? "s" : "");
+                }
+                else
+                {
+                    duration = $"{session.TotalMinutes} minutes";
+                }
+
+                // ADDED TIME 3 MINUTE INCREMENT
+
+                session.StartTime = DateTime.Now.AddMinutes(3);
+                session.EndTime = session.StartTime.AddMinutes(session.TotalMinutes);
+                session.IsActive = true;
+
+                decimal hours_decimal = session.TotalMinutes / 60.0m;
+                decimal hourlyRate = hours_decimal > 0 ? session.TotalPrice / hours_decimal : session.TotalPrice;
+
+                summary.AppendLine($"       Game Type:        {session.GameName}");
+
+                summary.AppendLine($"       Start Time:       {session.StartTime:hh:mm tt}");
+
+                summary.AppendLine($"       End Time:         {session.EndTime:hh:mm tt}");
+
+                summary.AppendLine($"       Duration:         {duration}");
+                summary.AppendLine($"       Rate:             ₱ {hourlyRate:N2}/hour");
+                summary.AppendLine("       ───────────────────────────────────────────────");
+                summary.AppendLine($"       Subtotal:         ₱ {session.TotalPrice:N2}");
+                summary.AppendLine();
+            }
+
+            rtbSummary.Text = summary.ToString();
+
+            // Calculate totals
+            CalculateTotals();
+
+            // IMPORTANT: Initialize payment validation
+            InitializePaymentValidation();
+
+            System.Diagnostics.Debug.WriteLine($"=== PAYMENT DATA LOADED ===");
+            System.Diagnostics.Debug.WriteLine($"Sessions: {sessions.Count}");
+            System.Diagnostics.Debug.WriteLine($"Final Amount: ₱{finalAmount:N2}");
+
+        }
 
 
         // ============ INITIALIZATION ============
@@ -58,152 +155,7 @@ namespace KGHCashierPOS
             txtDiscountAmount.Enabled = false;
         }
 
-        // ============ LOAD PAYMENT DATA ============
-        public void LoadPaymentData(Dictionary<string, GameSession> sessions, decimal total)
-        {
-            _sessions = sessions;
-            _totalAmount = total;
 
-            // Clear and build transaction summary
-            rtbSummary.Clear();
-            StringBuilder summary = new StringBuilder();
-
-            summary.AppendLine("        ════════════════════════════════════════════════");
-            summary.AppendLine("            TRANSACTION DETAILS");
-            summary.AppendLine("        ════════════════════════════════════════════════");
-            summary.AppendLine();
-
-            foreach (var session in sessions.Values)
-            {
-                // Format duration
-                string duration;
-                if (session.TotalMinutes >= 60)
-                {
-                    int hours = session.TotalMinutes / 60;
-                    int minutes = session.TotalMinutes % 60;
-                    duration = minutes > 0
-                        ? $"       {hours} hours {minutes} minutes"
-                        : $"       {hours} hour" + (hours > 1 ? "s" : "");
-                }
-                else
-                {
-                    duration = $"       {session.TotalMinutes} minutes";
-                }
-
-                // Calculate rate
-                decimal hours_decimal = session.TotalMinutes / 60.0m;
-                decimal hourlyRate = hours_decimal > 0 ? session.TotalPrice / hours_decimal : session.TotalPrice;
-
-                // Build transaction details
-                summary.AppendLine($"       Game Type:        {session.GameName}");
-
-                summary.AppendLine($"       Start Time:       {session.StartTime:hh:mm tt}");
-
-                summary.AppendLine($"       End Time:         {session.EndTime:hh:mm tt}");
-
-                summary.AppendLine($"       Duration:  {duration}");
-                summary.AppendLine($"       Rate:             ₱ {hourlyRate:N2}/hour");
-                summary.AppendLine("       ───────────────────────────────────────────────");
-                summary.AppendLine($"       Subtotal:         ₱ {session.TotalPrice:N2}");
-                summary.AppendLine();
-            }
-
-            rtbSummary.Text = summary.ToString();
-
-            // Calculate and display totals
-            CalculateTotals();
-
-            // Clear payment fields
-            txtCashReceived.Clear();
-            txtGcashRef.Clear();
-            lblChange.Text = "₱ 0.00";
-
-        }
-
-        // ============ DISCOUNT EVENT HANDLERS ============
-        private void cboDiscountType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (cboDiscountType.SelectedItem == null)
-                return;
-
-            string selectedDiscount = cboDiscountType.SelectedItem.ToString();
-
-            if (!ValidateDiscountEligibility(selectedDiscount))
-                return;
-
-            switch (selectedDiscount)
-            {
-                case "None":
-                    txtDiscountAmount.Enabled = false;
-                    txtDiscountAmount.Clear();
-                    discountAmount = 0;
-                    break;
-
-                case "Senior Citizen (20%)":
-                case "PWD (20%)":
-                    txtDiscountAmount.Enabled = false;
-                    txtDiscountAmount.Clear();
-                    ApplyPercentageDiscount(0.20m);
-                    MessageBox.Show($"20% discount applied!\nDiscount: ₱ {discountAmount:N2}",
-                        "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    break;
-
-                case "Member (10%)":
-                    txtDiscountAmount.Enabled = false;
-                    txtDiscountAmount.Clear();
-                    ApplyPercentageDiscount(0.10m);
-                    MessageBox.Show($"10% discount applied!\nDiscount: ₱ {discountAmount:N2}",
-                        "Discount Applied", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    break;
-
-                case "Promo Code":
-                    txtDiscountAmount.Enabled = true;
-                    txtDiscountAmount.Clear();
-                    txtDiscountAmount.Focus();
-                    discountAmount = 0;
-                    break;
-
-                case "Custom Amount":
-                    txtDiscountAmount.Enabled = true;
-                    txtDiscountAmount.Clear();
-                    txtDiscountAmount.Focus();
-                    discountAmount = 0;
-                    break;
-            }
-
-            CalculateTotals();
-        }
-
-        private void txtDiscountAmount_TextChanged(object sender, EventArgs e)
-        {
-            string selectedDiscount = cboDiscountType.SelectedItem?.ToString();
-
-            if (selectedDiscount == "Custom Amount")
-            {
-                if (decimal.TryParse(txtDiscountAmount.Text, out decimal customAmount))
-                {
-                    subtotalAmount = CalculateSubtotal();
-
-                    if (customAmount > subtotalAmount)
-                    {
-                        MessageBox.Show("Discount cannot exceed subtotal amount!",
-                            "Invalid Discount", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        txtDiscountAmount.Clear();
-                        discountAmount = 0;
-                    }
-                    else
-                    {
-                        discountAmount = customAmount;
-                    }
-                }
-                else
-                {
-                    discountAmount = 0;
-                }
-
-                CalculateTotals();
-            }
-        }
 
         private void txtDiscountAmount_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -441,12 +393,23 @@ namespace KGHCashierPOS
         {
             if (rbCash.Checked)
             {
+                // Show cash controls
                 txtCashReceived.Visible = true;
                 txtCashReceived.Enabled = true;
                 lblChange.Visible = true;
 
+                // Hide GCash controls (BEST OPTION - completely hidden)
                 txtGcashRef.Visible = false;
                 txtGcashRef.Enabled = false;
+                txtGcashRef.Clear();
+
+                // Clear validation flag
+                isPaymentMethodValid = false;
+
+                // Revalidate cash amount
+                ValidateCashPayment();
+
+                System.Diagnostics.Debug.WriteLine("Payment method: CASH selected");
             }
         }
 
@@ -454,66 +417,202 @@ namespace KGHCashierPOS
         {
             if (rbGCash.Checked)
             {
+                // Show GCash controls
                 txtGcashRef.Visible = true;
                 txtGcashRef.Enabled = true;
+                txtGcashRef.Focus();
 
+                // Hide cash controls
                 txtCashReceived.Visible = false;
                 txtCashReceived.Enabled = false;
+                txtCashReceived.Clear();
                 lblChange.Visible = false;
+                lblChange.Text = "₱0.00";
+
+                // Clear validation flag
+                isPaymentMethodValid = false;
+
+                // Disable button until valid reference
+                btnConfirmPayment.Enabled = false;
+
+                System.Diagnostics.Debug.WriteLine("Payment method: GCASH selected");
             }
         }
 
         private void txtCashReceived_TextChanged(object sender, EventArgs e)
         {
+            ValidateCashPayment();
+        }
+        private void txtGcashRef_TextChanged(object sender, EventArgs e)
+        {
+            ValidateGCashReference();
+        }
+
+        private void ValidateCashPayment()
+        {
+            if (!rbCash.Checked)
+                return;
+
+            // Check if input is empty
+            if (string.IsNullOrWhiteSpace(txtCashReceived.Text))
+            {
+                lblChange.Text = "₱0.00";
+                lblChange.ForeColor = System.Drawing.Color.Black;
+                btnConfirmPayment.Enabled = false;
+                isPaymentMethodValid = false;
+                return;
+            }
+
+            // Try to parse the cash amount
             if (decimal.TryParse(txtCashReceived.Text, out decimal cashReceived))
             {
-                decimal change = cashReceived - finalAmount;
-
-                if (change >= 0)
+                // Check if cash is sufficient
+                if (cashReceived >= finalAmount)
                 {
+                    decimal change = cashReceived - finalAmount;
                     lblChange.Text = "₱" + change.ToString("N2");
                     lblChange.ForeColor = System.Drawing.Color.Green;
                     btnConfirmPayment.Enabled = true;
+                    isPaymentMethodValid = true;
+
+                    System.Diagnostics.Debug.WriteLine($"Cash valid: ₱{cashReceived:N2} >= ₱{finalAmount:N2}");
                 }
                 else
                 {
                     lblChange.Text = "Insufficient";
                     lblChange.ForeColor = System.Drawing.Color.Red;
                     btnConfirmPayment.Enabled = false;
+                    isPaymentMethodValid = false;
+
+                    System.Diagnostics.Debug.WriteLine($"Cash insufficient: ₱{cashReceived:N2} < ₱{finalAmount:N2}");
                 }
             }
             else
             {
-                lblChange.Text = "₱ 0.00";
-                lblChange.ForeColor = System.Drawing.Color.Black;
+                lblChange.Text = "Invalid amount";
+                lblChange.ForeColor = System.Drawing.Color.Red;
+                btnConfirmPayment.Enabled = false;
+                isPaymentMethodValid = false;
             }
         }
 
- 
+        private void ValidateGCashReference()
+        {
+            if (!rbGCash.Checked)
+                return;
+
+            string reference = txtGcashRef.Text.Trim();
+
+            // Check if empty
+            if (string.IsNullOrWhiteSpace(reference))
+            {
+                btnConfirmPayment.Enabled = false;
+                isPaymentMethodValid = false;
+                txtGcashRef.BackColor = System.Drawing.Color.White;
+                return;
+            }
+
+            // Validate GCash reference format
+            // GCash reference numbers are typically 13 digits
+            bool isValid = ValidateGCashFormat(reference);
+
+            if (isValid)
+            {
+                txtGcashRef.BackColor = System.Drawing.Color.LightGreen;
+                btnConfirmPayment.Enabled = true;
+                isPaymentMethodValid = true;
+
+                System.Diagnostics.Debug.WriteLine($"GCash reference valid: {reference}");
+            }
+            else
+            {
+                txtGcashRef.BackColor = System.Drawing.Color.LightCoral;
+                btnConfirmPayment.Enabled = false;
+                isPaymentMethodValid = false;
+
+                System.Diagnostics.Debug.WriteLine($"GCash reference invalid: {reference}");
+            }
+        }
+
+        private bool ValidateGCashFormat(string reference)
+        {
+            // Remove any spaces or dashes
+            reference = reference.Replace(" ", "").Replace("-", "");
+
+            // Check if all characters are digits
+            if (!reference.All(char.IsDigit))
+            {
+                return false;
+            }
+
+            // GCash reference format validation
+            // Standard GCash reference: 13 digits
+            // Example: 1234567890123
+            if (reference.Length == 13)
+            {
+                return true;
+            }
+
+            // Some GCash variants use 12 or 14 digits
+            // Adjust based on your requirements
+            if (reference.Length >= 12 && reference.Length <= 14)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private string GetSelectedPaymentMethod()
+        {
+            if (rbCash != null && rbCash.Checked)
+                return "Cash";
+            else if (rbGCash != null && rbGCash.Checked)
+                return "GCash";
+            else
+                return "Cash";
+        }
+
 
         // ============ PAYMENT PROCESSING ============
         private void btnConfirmPayment_Click(object sender, EventArgs e)
         {
+            // Double-check validation before processing
+            if (!isPaymentMethodValid)
+            {
+                MessageBox.Show("Please enter valid payment information!", "Invalid Payment",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             string paymentMethod = GetSelectedPaymentMethod();
             string reference = "";
             decimal cashAmount = 0;
 
-            // Validate payment method
+            // Validate based on payment method
             if (paymentMethod == "Cash")
             {
                 if (string.IsNullOrWhiteSpace(txtCashReceived.Text))
                 {
                     MessageBox.Show("Please enter cash received amount.", "Payment Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtCashReceived.Focus();
                     return;
                 }
 
-                cashAmount = decimal.Parse(txtCashReceived.Text);
+                if (!decimal.TryParse(txtCashReceived.Text, out cashAmount))
+                {
+                    MessageBox.Show("Invalid cash amount format!", "Payment Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtCashReceived.Focus();
+                    return;
+                }
 
                 if (cashAmount < finalAmount)
                 {
-                    MessageBox.Show("Insufficient cash.", "Payment Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Insufficient cash!\n\nReceived: ₱{cashAmount:N2}\nRequired: ₱{finalAmount:N2}",
+                        "Payment Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtCashReceived.Focus();
                     return;
                 }
 
@@ -525,10 +624,40 @@ namespace KGHCashierPOS
                 {
                     MessageBox.Show("Please enter GCash reference number.", "Payment Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtGcashRef.Focus();
                     return;
                 }
 
-                reference = txtGcashRef.Text;
+                reference = txtGcashRef.Text.Trim();
+
+                // Final validation
+                if (!ValidateGCashFormat(reference))
+                {
+                    MessageBox.Show("Invalid GCash reference number!\n\n" +
+                        "GCash reference must be 13 digits.\n" +
+                        "Example: 1234567890123",
+                        "Invalid Reference", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtGcashRef.Focus();
+                    return;
+                }
+
+                // Optional: Check for duplicate reference
+                if (CheckDuplicateGCashReference(reference))
+                {
+                    DialogResult result = MessageBox.Show(
+                        "This GCash reference number has been used before!\n\n" +
+                        "Are you sure you want to continue?",
+                        "Duplicate Reference",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.No)
+                    {
+                        txtGcashRef.Focus();
+                        txtGcashRef.SelectAll();
+                        return;
+                    }
+                }
             }
             else
             {
@@ -537,24 +666,33 @@ namespace KGHCashierPOS
                 return;
             }
 
-            // Show confirmation
-            DialogResult result = MessageBox.Show(
-                $"Total Amount: ₱{finalAmount:N2}\n" +
-                $"Payment Method: {paymentMethod}\n\n" +
-                "Confirm this payment?",
+            // Show confirmation dialog
+            string confirmationMessage = paymentMethod == "Cash"
+                ? $"Payment Method: Cash\n" +
+                  $"Amount Received: ₱{cashAmount:N2}\n" +
+                  $"Total: ₱{finalAmount:N2}\n" +
+                  $"Change: ₱{(cashAmount - finalAmount):N2}\n\n" +
+                  "Confirm this payment?"
+                : $"Payment Method: GCash\n" +
+                  $"Reference Number: {reference}\n" +
+                  $"Total: ₱{finalAmount:N2}\n\n" +
+                  "Confirm this payment?";
+
+            DialogResult confirmResult = MessageBox.Show(
+                confirmationMessage,
                 "Confirm Payment",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );
 
-            if (result == DialogResult.No)
+            if (confirmResult == DialogResult.No)
                 return;
 
             // Process payment
             try
             {
                 string receiptNo = "MPGH-" + DateTime.Now.ToString("yyyyMMddHHmmss");
-                string discountType = cboDiscountType.SelectedItem.ToString();
+                string discountType = cboDiscountType.SelectedItem?.ToString() ?? "None";
 
                 // Save to database
                 foreach (var session in _sessions.Values)
@@ -577,12 +715,31 @@ namespace KGHCashierPOS
                 GenerateReceiptPDF(paymentMethod, cashAmount.ToString("0.00"), change, reference);
 
                 // Log activity
-                LogActivity("Payment Processed", $"{paymentMethod} - ₱ {finalAmount:N2}");
+                LogActivity("Payment Processed", $"{paymentMethod} - ₱{finalAmount:N2} - Ref: {reference}");
 
                 MessageBox.Show("Payment successful!\nReceipt has been generated.", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+                // Clear and reset
+                ClearPaymentData();
                 this.Visible = false;
+
+                // Re-enable CashierForm button
+                Form parentForm = this.FindForm();
+                if (parentForm != null)
+                {
+                    var enableMethod = parentForm.GetType().GetMethod("EnableProceedButton");
+                    if (enableMethod != null)
+                    {
+                        enableMethod.Invoke(parentForm, null);
+                    }
+
+                    var resetMethod = parentForm.GetType().GetMethod("ResetForNewTransaction");
+                    if (resetMethod != null)
+                    {
+                        resetMethod.Invoke(parentForm, null);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -590,8 +747,88 @@ namespace KGHCashierPOS
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            PaymentSuccessful?.Invoke();
+        }
 
+        private bool CheckDuplicateGCashReference(string reference)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(Database.ConnectionString))
+                {
+                    conn.Open();
+
+                    string query = @"
+                SELECT COUNT(*) 
+                FROM payments 
+                WHERE payment_method = 'GCash' 
+                AND amount_tendered = @reference";
+
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@reference", reference);
+                        int count = Convert.ToInt32(cmd.ExecuteScalar());
+                        return count > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error checking duplicate: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ============ RESET PAYMENT FIELDS ============
+        private void ClearPaymentData()
+        {
+            // Clear sessions
+            _sessions?.Clear();
+            _totalAmount = 0;
+            discountAmount = 0;
+            subtotalAmount = 0;
+            finalAmount = 0;
+
+            // Clear display
+            rtbSummary.Clear();
+
+            // Reset discount
+            if (cboDiscountType != null)
+            {
+                cboDiscountType.SelectedIndex = 0;
+            }
+
+            txtDiscountAmount.Clear();
+            txtDiscountAmount.Enabled = false;
+
+            // Clear payment fields
+            txtCashReceived.Clear();
+            txtGcashRef.Clear();
+
+            // Reset labels
+            if (lblSubtotal != null)
+                lblSubtotal.Text = "₱0.00";
+
+            if (lblDiscountAmount != null)
+                lblDiscountAmount.Text = "-₱0.00";
+
+            if (lblTotalAmount != null)
+                lblTotalAmount.Text = "₱0.00";
+
+            if (lblChange != null)
+                lblChange.Text = "₱0.00";
+
+            // Reset payment method to Cash
+            if (rbCash != null)
+                rbCash.Checked = true;
+
+            // Reset validation
+            isPaymentMethodValid = false;
+            btnConfirmPayment.Enabled = false;
+
+            // Reset background colors
+            txtGcashRef.BackColor = System.Drawing.Color.White;
+
+            System.Diagnostics.Debug.WriteLine("=== PAYMENT DATA CLEARED ===");
         }
 
 
@@ -618,16 +855,6 @@ namespace KGHCashierPOS
             {
                 System.Diagnostics.Debug.WriteLine($"Error updating order status: {ex.Message}");
             }
-        }
-
-        private string GetSelectedPaymentMethod()
-        {
-            if (rbCash != null && rbCash.Checked)
-                return "Cash";
-            else if (rbGCash != null && rbGCash.Checked)
-                return "GCash";
-            else
-                return "Cash";
         }
 
         // ============ DATABASE OPERATIONS ============
@@ -1028,4 +1255,5 @@ namespace KGHCashierPOS
             System.Diagnostics.Process.Start(filePath);
         }
     }
+
 }

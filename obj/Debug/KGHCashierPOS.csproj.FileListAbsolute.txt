@@ -93,3 +93,4 @@ C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashi.BF22D446.Up2Date
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.exe
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.pdb
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.exe.config
+C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.NumericKeyboardControl.resources
