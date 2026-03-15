@@ -42,12 +42,6 @@
             this.lbDisplay = new System.Windows.Forms.ListBox();
             this.label5 = new System.Windows.Forms.Label();
             this.ordernum = new System.Windows.Forms.Label();
-            this.txtContact = new System.Windows.Forms.TextBox();
-            this.lblContact = new System.Windows.Forms.Label();
-            this.txtAge = new System.Windows.Forms.TextBox();
-            this.lblAge = new System.Windows.Forms.Label();
-            this.txtName = new System.Windows.Forms.TextBox();
-            this.lblName = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.lblSelect = new System.Windows.Forms.Label();
             this.btnBilliards = new System.Windows.Forms.Button();
@@ -126,7 +120,6 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.BackgroundImage = global::KGHCashierPOS.Properties.Resources.MATCHPOINT;
             this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.pictureBox1.Location = new System.Drawing.Point(9, 5);
             this.pictureBox1.Name = "pictureBox1";
@@ -160,7 +153,7 @@
             this.btnRemove.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRemove.Font = new System.Drawing.Font("Microsoft Sans Serif", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnRemove.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.btnRemove.Location = new System.Drawing.Point(434, 497);
+            this.btnRemove.Location = new System.Drawing.Point(440, 497);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(159, 61);
             this.btnRemove.TabIndex = 41;
@@ -210,69 +203,6 @@
             this.ordernum.TabIndex = 37;
             this.ordernum.Text = "Order #: ";
             // 
-            // txtContact
-            // 
-            this.txtContact.AcceptsTab = true;
-            this.txtContact.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtContact.Font = new System.Drawing.Font("Miriam Libre", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtContact.Location = new System.Drawing.Point(394, 209);
-            this.txtContact.Name = "txtContact";
-            this.txtContact.Size = new System.Drawing.Size(233, 39);
-            this.txtContact.TabIndex = 36;
-            this.txtContact.Text = "\r\n";
-            // 
-            // lblContact
-            // 
-            this.lblContact.AutoSize = true;
-            this.lblContact.Font = new System.Drawing.Font("Miriam Libre", 9.999999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblContact.Location = new System.Drawing.Point(269, 216);
-            this.lblContact.Name = "lblContact";
-            this.lblContact.Size = new System.Drawing.Size(127, 26);
-            this.lblContact.TabIndex = 35;
-            this.lblContact.Text = "Contact No.";
-            // 
-            // txtAge
-            // 
-            this.txtAge.AcceptsTab = true;
-            this.txtAge.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtAge.Font = new System.Drawing.Font("Miriam Libre", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtAge.Location = new System.Drawing.Point(165, 209);
-            this.txtAge.Name = "txtAge";
-            this.txtAge.Size = new System.Drawing.Size(88, 39);
-            this.txtAge.TabIndex = 34;
-            this.txtAge.Text = "\r\n";
-            // 
-            // lblAge
-            // 
-            this.lblAge.AutoSize = true;
-            this.lblAge.Font = new System.Drawing.Font("Miriam Libre", 9.999999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAge.Location = new System.Drawing.Point(109, 216);
-            this.lblAge.Name = "lblAge";
-            this.lblAge.Size = new System.Drawing.Size(49, 26);
-            this.lblAge.TabIndex = 33;
-            this.lblAge.Text = "Age";
-            // 
-            // txtName
-            // 
-            this.txtName.AcceptsTab = true;
-            this.txtName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtName.Font = new System.Drawing.Font("Miriam Libre", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtName.Location = new System.Drawing.Point(166, 144);
-            this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(460, 39);
-            this.txtName.TabIndex = 32;
-            this.txtName.Text = "\r\n";
-            // 
-            // lblName
-            // 
-            this.lblName.AutoSize = true;
-            this.lblName.Font = new System.Drawing.Font("Miriam Libre", 9.999999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblName.Location = new System.Drawing.Point(100, 151);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(69, 26);
-            this.lblName.TabIndex = 31;
-            this.lblName.Text = "Name";
-            // 
             // panel3
             // 
             this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(190)))), ((int)(((byte)(95)))));
@@ -300,7 +230,6 @@
             // btnBilliards
             // 
             this.btnBilliards.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btnBilliards.BackgroundImage = global::KGHCashierPOS.Properties.Resources.BILLIARDS;
             this.btnBilliards.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnBilliards.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnBilliards.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -316,7 +245,6 @@
             // btnTableTennis
             // 
             this.btnTableTennis.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btnTableTennis.BackgroundImage = global::KGHCashierPOS.Properties.Resources.TABLE_TENNIS;
             this.btnTableTennis.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnTableTennis.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnTableTennis.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -332,7 +260,6 @@
             // btnScooter
             // 
             this.btnScooter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btnScooter.BackgroundImage = global::KGHCashierPOS.Properties.Resources.SCOOTER;
             this.btnScooter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnScooter.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnScooter.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -348,7 +275,6 @@
             // btnBadminton
             // 
             this.btnBadminton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btnBadminton.BackgroundImage = global::KGHCashierPOS.Properties.Resources.BADMINTON;
             this.btnBadminton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnBadminton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnBadminton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -388,7 +314,6 @@
             // btn30min
             // 
             this.btn30min.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btn30min.BackgroundImage = global::KGHCashierPOS.Properties.Resources._30_MINUTES;
             this.btn30min.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btn30min.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btn30min.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -404,7 +329,6 @@
             // btn1hour
             // 
             this.btn1hour.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.btn1hour.BackgroundImage = global::KGHCashierPOS.Properties.Resources._1_HOUR;
             this.btn1hour.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btn1hour.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btn1hour.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -470,12 +394,6 @@
             this.Controls.Add(this.lbDisplay);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.ordernum);
-            this.Controls.Add(this.txtContact);
-            this.Controls.Add(this.lblContact);
-            this.Controls.Add(this.txtAge);
-            this.Controls.Add(this.lblAge);
-            this.Controls.Add(this.txtName);
-            this.Controls.Add(this.lblName);
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "OrderForm";
@@ -508,12 +426,6 @@
         private System.Windows.Forms.ListBox lbDisplay;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label ordernum;
-        private System.Windows.Forms.TextBox txtContact;
-        private System.Windows.Forms.Label lblContact;
-        private System.Windows.Forms.TextBox txtAge;
-        private System.Windows.Forms.Label lblAge;
-        private System.Windows.Forms.TextBox txtName;
-        private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.Label lblSelect;
         private System.Windows.Forms.Button btnBilliards;

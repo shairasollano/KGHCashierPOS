@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using System.Drawing;
 
 namespace KGHCashierPOS
 {
@@ -49,18 +50,22 @@ namespace KGHCashierPOS
         private void btnBilliards_Click(object sender, EventArgs e)
         {
             selectedGame = "Billiards";
+            btnBilliards.BackColor = Color.FromArgb(233, 190, 95);
         }
         private void btnScooter_Click(object sender, EventArgs e)
         {
             selectedGame = "Scooter";
+            btnScooter.BackColor = Color.FromArgb(233, 190, 95);
         }
         private void btnBadminton_Click(object sender, EventArgs e)
         {
             selectedGame = "Badminton";
+            btnBadminton.BackColor = Color.FromArgb(233, 190, 95);
         }
         private void btnTableTennis_Click(object sender, EventArgs e)
         {
             selectedGame = "Table Tennis";
+            btnTableTennis.BackColor = Color.FromArgb(233, 190, 95);
         }
 
         // DURATION BUTTON CLICK EVENTS
@@ -68,10 +73,12 @@ namespace KGHCashierPOS
         private void btn30Min_Click(object sender, EventArgs e)
         {
             AddDurationToGame(30);
+            btn30min.BackColor = Color.FromArgb(233, 190, 95);
         }
         private void btn1Hour_Click(object sender, EventArgs e)
         {
             AddDurationToGame(60);
+            btn1hour.BackColor = Color.FromArgb(233, 190, 95);
         }
 
 
@@ -119,13 +126,10 @@ namespace KGHCashierPOS
 
             foreach (var session in activeSessions.Values)
             {
-                string durationText =
-                    session.TotalMinutes >= 60
-                    ? $"{session.TotalMinutes / 60} hr"
-                    : $"{session.TotalMinutes} min";
+                // FIX: Use FormatDuration method instead of inline formatting
+                string durationText = FormatDuration(session.TotalMinutes);
 
                 // ADDED TIME 3 MINUTE INCREMENT
-
                 session.StartTime = DateTime.Now.AddMinutes(3);
                 session.EndTime = session.StartTime.AddMinutes(session.TotalMinutes);
                 session.IsActive = true;
@@ -142,7 +146,32 @@ namespace KGHCashierPOS
                 totalAmount += session.TotalPrice;
             }
 
-            lblTotal.Text = "₱" + totalAmount.ToString("0.00");
+            lblTotal.Text = "₱ " + totalAmount.ToString("0.00");
+        }
+
+        private string FormatDuration(int totalMinutes)
+        {
+            if (totalMinutes < 60)
+            {
+                // Less than 1 hour: "30 min"
+                return $"{totalMinutes} min";
+            }
+            else
+            {
+                int hours = totalMinutes / 60;
+                int minutes = totalMinutes % 60;
+
+                if (minutes == 0)
+                {
+                    // Exact hours: "1 hr", "2 hr"
+                    return $"{hours} hr";
+                }
+                else
+                {
+                    // Hours + minutes: "1 hr 30 min", "2 hr 30 min"
+                    return $"{hours} hr {minutes} min";
+                }
+            }
         }
 
 
@@ -419,16 +448,17 @@ namespace KGHCashierPOS
     
         }
 
-        private void ResetTransaction()
+        public void ResetTransaction()
         {
             txtOrderNumber.Clear();
             lvSelectedGames.Items.Clear();
             lblTotal.Text = "₱0.00";
-
             activeSessions.Clear();
             totalAmount = 0;
-
+            selectedGame = "";
+            txtOrderNumber.Focus();
         }
+
         private void btnClearCashierForm_Click_1(object sender, EventArgs e)
         {
             ResetTransaction();
@@ -466,11 +496,5 @@ namespace KGHCashierPOS
             lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy"); 
             lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   
         }
-
-        private void chkExtend_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
     }
 }

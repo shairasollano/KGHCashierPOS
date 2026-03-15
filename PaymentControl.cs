@@ -147,9 +147,9 @@ namespace KGHCashierPOS
             cboDiscountType.Items.Add("None");
             cboDiscountType.Items.Add("Senior Citizen (20%)");
             cboDiscountType.Items.Add("PWD (20%)");
-            cboDiscountType.Items.Add("Member (10%)");
-            cboDiscountType.Items.Add("Promo Code");
-            cboDiscountType.Items.Add("Custom Amount");
+            // cboDiscountType.Items.Add("Member (10%)");
+            // cboDiscountType.Items.Add("Promo Code");
+            // cboDiscountType.Items.Add("Custom Amount");
 
             cboDiscountType.SelectedIndex = 0;
             txtDiscountAmount.Enabled = false;
@@ -456,8 +456,8 @@ namespace KGHCashierPOS
             // Check if input is empty
             if (string.IsNullOrWhiteSpace(txtCashReceived.Text))
             {
-                lblChange.Text = "₱0.00";
-                lblChange.ForeColor = System.Drawing.Color.Black;
+                lblChange.Text = "₱ 0.00";
+                lblChange.ForeColor = System.Drawing.Color.White;
                 btnConfirmPayment.Enabled = false;
                 isPaymentMethodValid = false;
                 return;
@@ -470,7 +470,7 @@ namespace KGHCashierPOS
                 if (cashReceived >= finalAmount)
                 {
                     decimal change = cashReceived - finalAmount;
-                    lblChange.Text = "₱" + change.ToString("N2");
+                    lblChange.Text = "₱ " + change.ToString("N2");
                     lblChange.ForeColor = System.Drawing.Color.Green;
                     btnConfirmPayment.Enabled = true;
                     isPaymentMethodValid = true;
@@ -698,16 +698,8 @@ namespace KGHCashierPOS
                 foreach (var session in _sessions.Values)
                 {
                     int sessionId = SaveSession(session);
-                    SavePayment(
-                        sessionId,
-                        paymentMethod,
-                        subtotalAmount,
-                        discountAmount,
-                        finalAmount,
-                        discountType,
-                        receiptNo,
-                        reference
-                    );
+                    SavePayment(sessionId, paymentMethod, subtotalAmount, discountAmount,
+                        finalAmount, discountType, receiptNo, reference);
                 }
 
                 // Generate receipt
@@ -715,31 +707,20 @@ namespace KGHCashierPOS
                 GenerateReceiptPDF(paymentMethod, cashAmount.ToString("0.00"), change, reference);
 
                 // Log activity
-                LogActivity("Payment Processed", $"{paymentMethod} - ₱{finalAmount:N2} - Ref: {reference}");
+                LogActivity("Payment Processed", $"{paymentMethod} - ₱{finalAmount:N2}");
 
                 MessageBox.Show("Payment successful!\nReceipt has been generated.", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Clear and reset
+                // Clear payment data
                 ClearPaymentData();
+
+                // Hide payment control
                 this.Visible = false;
 
-                // Re-enable CashierForm button
-                Form parentForm = this.FindForm();
-                if (parentForm != null)
-                {
-                    var enableMethod = parentForm.GetType().GetMethod("EnableProceedButton");
-                    if (enableMethod != null)
-                    {
-                        enableMethod.Invoke(parentForm, null);
-                    }
+                // ⭐ ADD THIS LINE - RAISE THE EVENT ⭐
+                PaymentSuccessful?.Invoke();
 
-                    var resetMethod = parentForm.GetType().GetMethod("ResetForNewTransaction");
-                    if (resetMethod != null)
-                    {
-                        resetMethod.Invoke(parentForm, null);
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -968,17 +949,17 @@ namespace KGHCashierPOS
             StringBuilder receipt = new StringBuilder();
 
             receipt.AppendLine("          ═══════════════════════════════════════");
-            receipt.AppendLine("                   MATCH POINT GAMING HUB");
+            receipt.AppendLine("                 MATCH POINT GAMING HUB");
             receipt.AppendLine("          ═══════════════════════════════════════");
             receipt.AppendLine();
             receipt.AppendLine("        RECEIPT PREVIEW");
             receipt.AppendLine();
-            receipt.AppendLine($"Date: {DateTime.Now:MM/dd/yyyy hh:mm tt}");
-            receipt.AppendLine($"Cashier: {Environment.UserName}");
-            receipt.AppendLine("───────────────────────────────────────");
+            receipt.AppendLine($"        Date: {DateTime.Now:MM/dd/yyyy hh:mm tt}");
+            receipt.AppendLine($"        Cashier: {Environment.UserName}");
+            receipt.AppendLine("        ───────────────────────────────────────");
             receipt.AppendLine();
-            receipt.AppendLine("TRANSACTION DETAILS");
-            receipt.AppendLine("───────────────────────────────────────");
+            receipt.AppendLine("        TRANSACTION DETAILS");
+            receipt.AppendLine("        ───────────────────────────────────────");
             receipt.AppendLine();
 
             foreach (var session in _sessions.Values)
@@ -994,31 +975,31 @@ namespace KGHCashierPOS
                 }
                 else
                 {
-                    duration = $"{session.TotalMinutes} min";
+                    duration = $"        {session.TotalMinutes} min";
                 }
 
-                receipt.AppendLine($"{session.GameName,-20} {duration,-12} ₱{session.TotalPrice,8:N2}");
+                receipt.AppendLine($"        {session.GameName,-20} {duration,-12} ₱{session.TotalPrice,8:N2}");
             }
 
-            receipt.AppendLine("───────────────────────────────────────");
+            receipt.AppendLine("        ───────────────────────────────────────");
             receipt.AppendLine();
-            receipt.AppendLine($"{"Subtotal:",-30} ₱{subtotalAmount,8:N2}");
+            receipt.AppendLine($"{"        Subtotal:",-30} ₱{subtotalAmount,8:N2}");
 
             if (discountAmount > 0)
             {
                 string discountType = cboDiscountType.SelectedItem?.ToString() ?? "None";
-                receipt.AppendLine($"{$"Discount ({discountType}):",-30} -₱{discountAmount,7:N2}");
+                receipt.AppendLine($"{$"        Discount ({discountType}):",-30} -₱{discountAmount,7:N2}");
             }
 
-            receipt.AppendLine("═══════════════════════════════════════");
-            receipt.AppendLine($"{"TOTAL AMOUNT DUE:",-30} ₱{finalAmount,8:N2}");
-            receipt.AppendLine("═══════════════════════════════════════");
+            receipt.AppendLine("        ═══════════════════════════════════════");
+            receipt.AppendLine($"{"        TOTAL AMOUNT DUE:",-30} ₱{finalAmount,8:N2}");
+            receipt.AppendLine("        ═══════════════════════════════════════");
             receipt.AppendLine();
 
             string paymentMethod = GetSelectedPaymentMethod();
-            receipt.AppendLine("PAYMENT METHOD");
-            receipt.AppendLine("───────────────────────────────────────");
-            receipt.AppendLine($"Payment Type: {paymentMethod}");
+            receipt.AppendLine("        PAYMENT METHOD");
+            receipt.AppendLine("        ───────────────────────────────────────");
+            receipt.AppendLine($"        Payment Type: {paymentMethod}");
 
             if (paymentMethod == "Cash" && !string.IsNullOrEmpty(txtCashReceived.Text))
             {
@@ -1030,14 +1011,14 @@ namespace KGHCashierPOS
                 receipt.AppendLine($"Reference No: {txtGcashRef.Text}");
             }
 
-            receipt.AppendLine("═══════════════════════════════════════");
+            receipt.AppendLine("        ═══════════════════════════════════════");
             receipt.AppendLine();
-            receipt.AppendLine("      Thank you for playing!");
-            receipt.AppendLine("      Please visit us again!");
+            receipt.AppendLine("              Thank you for playing!");
+            receipt.AppendLine("              Please visit us again!");
             receipt.AppendLine();
-            receipt.AppendLine("This is a PREVIEW only. No payment");
-            receipt.AppendLine("has been processed yet.");
-            receipt.AppendLine("═══════════════════════════════════════");
+            receipt.AppendLine("        This is a PREVIEW only. No payment");
+            receipt.AppendLine("        has been processed yet.");
+            receipt.AppendLine("        ═══════════════════════════════════════");
 
             rtbPreview.Text = receipt.ToString();
 

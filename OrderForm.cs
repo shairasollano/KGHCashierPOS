@@ -1,115 +1,110 @@
-﻿using System;
+﻿using iTextSharp.text;
+using iTextSharp.text.pdf;
+using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
-using MySql.Data.MySqlClient;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
 
 namespace KGHCashierPOS
 {
     public partial class OrderForm : Form
     {
-        // ============ VARIABLES ============
-        private string currentOrderNumber = "";
-        private List<OrderItem> orderItems = new List<OrderItem>();
-        private string selectedGameType = "";
-        private int selectedDuration = 0;
-        private decimal totalAmount = 0;
-
-        // Game rates per hour
-        private Dictionary<string, (decimal min30, decimal hour1)> priceList =
-        new Dictionary<string, (decimal, decimal)>()
-        {
-            { "Billiards", (80, 150) },
-            { "Scooter", (100, 150) },
-            { "Badminton", (50, 90) },
-            { "Table Tennis", (40, 75) }
-        };
+        // ============ SINGLE MANAGER INSTANCE ============
+        private OrderManager orderManager;
 
         // ============ CONSTRUCTOR ============
         public OrderForm()
         {
             InitializeComponent();
+            orderManager = new OrderManager();
             InitializeForm();
         }
 
         // ============ INITIALIZATION ============
         private void InitializeForm()
         {
-            GenerateOrderNumber();           
+            UpdateOrderNumberDisplay();
             UpdateTotalDisplay();
-
-            // Set default button colors
             ResetGameButtonColors();
             ResetDurationButtonColors();
-
         }
 
         private void OrderForm_Load(object sender, EventArgs e)
         {
-            
-
-            // Display current date and time
             lblDate1.Text = DateTime.Now.ToString("MM/dd/yyyy");
             lblTime1.Text = DateTime.Now.ToString("hh:mm tt");
 
-            // Start timer to update time
             Timer timeTimer = new Timer();
-            timeTimer.Interval = 1000; // Update every second
+            timeTimer.Interval = 1000;
             timeTimer.Tick += (s, ev) => lblTime1.Text = DateTime.Now.ToString("hh:mm tt");
             timeTimer.Start();
         }
 
-        // Generate order num
-
-        private void GenerateOrderNumber()
+        // ============ DISPLAY UPDATES ============
+        private void UpdateOrderNumberDisplay()
         {
-            currentOrderNumber = GetNextOrderNumber();
-            lblOrderNum.Text = "Order #: " + currentOrderNumber;
+            lblOrderNum.Text = "Order #: " + orderManager.OrderNumber;
         }
 
-        private string GetNextOrderNumber()
+        private void UpdateTotalDisplay()
         {
-            try
+            lblTotalValue.Text = "₱" + orderManager.TotalAmount.ToString("N2");
+        }
+
+        private void UpdateListBoxDisplay()
+        {
+            lbDisplay.Items.Clear();
+
+            // Header
+            lbDisplay.Items.Add("═══════════════════════════════════════════════");
+            lbDisplay.Items.Add($"ORDER NUMBER: {orderManager.OrderNumber}");
+            lbDisplay.Items.Add("═══════════════════════════════════════════════");
+            lbDisplay.Items.Add("");
+            lbDisplay.Items.Add("GAMES ORDERED:");
+            lbDisplay.Items.Add("───────────────────────────────────────────────");
+
+            // Items
+            int itemNumber = 1;
+            foreach (var item in orderManager.Items)
             {
-                using (var conn = new MySqlConnection(Database.ConnectionString))
+                lbDisplay.Items.Add($"{itemNumber}. {item.GameName}");
+                lbDisplay.Items.Add($"   Duration: {item.GetDurationText()}");
+                lbDisplay.Items.Add($"   Game Price: ₱{item.GamePrice:N2}");
+
+                // Equipment
+                if (item.Equipment.Count > 0)
                 {
-                    conn.Open();
-
-                    // Try to get the last numeric order number
-                    string query = @"
-                SELECT order_number 
-                FROM orders 
-                WHERE order_number REGEXP '^[0-9]+$'
-                ORDER BY CAST(order_number AS UNSIGNED) DESC 
-                LIMIT 1";
-
-                    using (var cmd = new MySqlCommand(query, conn))
+                    lbDisplay.Items.Add($"   Equipment:");
+                    foreach (var eq in item.Equipment)
                     {
-                        object result = cmd.ExecuteScalar();
-
-                        if (result != null && int.TryParse(result.ToString(), out int lastNumber))
+                        if (eq.DefaultQuantity > 0)
                         {
-                            int nextNumber = lastNumber + 1;
-                            return nextNumber.ToString("D6");
+                            lbDisplay.Items.Add($"     • {eq.Name} x{eq.DefaultQuantity} (Included)");
+                        }
+                        if (eq.RentalQuantity > 0)
+                        {
+                            lbDisplay.Items.Add($"     • {eq.Name} x{eq.RentalQuantity} ({eq.Type}) - ₱{eq.TotalCost:N2}");
                         }
                     }
+                    if (item.EquipmentCost > 0)
+                    {
+                        lbDisplay.Items.Add($"   Equipment Cost: ₱{item.EquipmentCost:N2}");
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error getting order number: {ex.Message}");
+
+                lbDisplay.Items.Add($"   Total: ₱{item.TotalPrice:N2}");
+                lbDisplay.Items.Add("");
+                itemNumber++;
             }
 
-            // Start from 000001 if no orders exist
-            return "000001";
+            lbDisplay.Items.Add("───────────────────────────────────────────────");
+            lbDisplay.Items.Add($"TOTAL AMOUNT: ₱{orderManager.TotalAmount:N2}");
+            lbDisplay.Items.Add("═══════════════════════════════════════════════");
         }
 
-
-        // ============ GAME SELECTION BUTTONS ============
+        // ============ GAME SELECTION ============
         private void btnBilliards_Click(object sender, EventArgs e)
         {
             SelectGame("Billiards", btnBilliards);
@@ -132,14 +127,9 @@ namespace KGHCashierPOS
 
         private void SelectGame(string gameName, Button clickedButton)
         {
-            selectedGameType = gameName;
-
-            // Reset all game button colors
+            orderManager.SelectedGame = gameName;
             ResetGameButtonColors();
-
-            // Highlight selected game
             clickedButton.BackColor = Color.Orange;
-
         }
 
         private void ResetGameButtonColors()
@@ -150,26 +140,20 @@ namespace KGHCashierPOS
             btnTableTennis.BackColor = Color.FromArgb(64, 64, 64);
         }
 
-        // ============ DURATION SELECTION BUTTONS ============
+        // ============ DURATION SELECTION ============
         private void btn30min_Click(object sender, EventArgs e)
         {
-            selectedDuration = 30;
-
+            orderManager.SelectedDuration = 30;
             btn30min.BackColor = Color.Orange;
             btn1hour.BackColor = Color.FromArgb(64, 64, 64);
-
-            // Try to add game if game is selected
             TryAddGameToOrder();
         }
 
         private void btn1hour_Click(object sender, EventArgs e)
         {
-            selectedDuration = 60;
-
+            orderManager.SelectedDuration = 60;
             btn1hour.BackColor = Color.Orange;
             btn30min.BackColor = Color.FromArgb(64, 64, 64);
-
-            // Try to add game if game is selected
             TryAddGameToOrder();
         }
 
@@ -179,318 +163,194 @@ namespace KGHCashierPOS
             btn1hour.BackColor = Color.FromArgb(64, 64, 64);
         }
 
-        // ============ ADD GAME TO ORDER ============
+        // ============ ADD TO ORDER ============
         private void TryAddGameToOrder()
         {
-            // Check if both game and duration are selected
-            if (string.IsNullOrEmpty(selectedGameType))
+            if (!orderManager.IsGameSelected())
             {
                 MessageBox.Show("Please select a game first!", "No Game Selected",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (selectedDuration == 0)
+            if (!orderManager.IsDurationSelected())
             {
-                MessageBox.Show("Please select duration (30 min or 1 hour)!", "No Duration Selected",
+                MessageBox.Show("Please select duration!", "No Duration Selected",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Both are selected, add to order
-            AddGameToOrder();
+            ShowEquipmentSelection();
         }
 
-        // ============ UPDATE TOTAL DISPLAY ============
-        private void UpdateTotalDisplay()
+        private void ShowEquipmentSelection()
         {
-            totalAmount = 0;
-
-            foreach (var item in orderItems)
+            if (!orderManager.HasEquipment(orderManager.SelectedGame))
             {
-                totalAmount += item.Price;
-                System.Diagnostics.Debug.WriteLine($"Adding item: {item.GameName} - ₱{item.Price:N2}, Running total: ₱{totalAmount:N2}");
-            }
-
-            lblTotalValue.Text = "₱" + totalAmount.ToString("N2");
-
-            System.Diagnostics.Debug.WriteLine($"=== FINAL TOTAL: ₱{totalAmount:N2} ===");
-        }
-
-        private void AddGameToOrder()
-        {
-            // Validate game selection
-            if (string.IsNullOrEmpty(selectedGameType))
-            {
-                MessageBox.Show("Please select a game first!", "No Game Selected",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                AddGameToOrder(new List<Equipment>(), 0);
                 return;
             }
 
-            // Calculate price
-            decimal price = CalculatePrice(selectedGameType, selectedDuration);
+            List<Equipment> equipment = orderManager.GetEquipmentForGame(orderManager.SelectedGame);
 
-            System.Diagnostics.Debug.WriteLine($"Calculated price for {selectedGameType} ({selectedDuration} min): ₱{price:N2}");
+            using (var dialog = new EquipmentSelectionDialog(orderManager.SelectedGame, equipment))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    AddGameToOrder(dialog.SelectedEquipment, dialog.TotalEquipmentCost);
+                }
+            } 
+        }
 
-            // Create order item
+        private void AddGameToOrder(List<Equipment> equipment, decimal equipmentCost)
+        {
+            decimal gamePrice = orderManager.CalculateGamePrice(
+                orderManager.SelectedGame,
+                orderManager.SelectedDuration
+            );
+
             OrderItem item = new OrderItem
             {
-                OrderNumber = currentOrderNumber,
-                CustomerName = txtName.Text.Trim(),
-                GameName = selectedGameType,
-                Duration = selectedDuration,
-                Price = price
+                OrderNumber = orderManager.OrderNumber,
+                GameName = orderManager.SelectedGame,
+                Duration = orderManager.SelectedDuration,
+                GamePrice = gamePrice,
+                Equipment = equipment,
+                EquipmentCost = equipmentCost
             };
 
-            // Add to list
-            orderItems.Add(item);
-
-            // Update total FIRST
+            orderManager.AddItem(item);
             UpdateTotalDisplay();
-
-            // Display in ListBox AFTER updating total
             UpdateListBoxDisplay();
 
-            // Show confirmation
-            string durationText = selectedDuration >= 60 ? "1 hour" : "30 minutes";
-            MessageBox.Show($"{selectedGameType} ({durationText}) added!\nPrice: ₱{price:N2}",
-                "Game Added", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            string equipText = equipmentCost > 0 ? $"\nEquipment: ₱{equipmentCost:N2}" : "";
+            MessageBox.Show(
+                $"{item.GameName} ({item.GetDurationText()}) added!\n" +
+                $"Game: ₱{gamePrice:N2}" + equipText +
+                $"\nTotal: ₱{item.TotalPrice:N2}",
+                "Game Added",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
 
-            // Reset selections for next item
             ResetGameButtonColors();
             ResetDurationButtonColors();
-            selectedGameType = "";
-            selectedDuration = 0;
+            orderManager.ResetSelection();
         }
 
-
-        // ============ UPDATE LISTBOX DISPLAY ============
-        private void UpdateListBoxDisplay()
-        {
-            lbDisplay.Items.Clear();
-
-            // Add header
-            lbDisplay.Items.Add("═══════════════════════════════════════════════");
-            lbDisplay.Items.Add($"ORDER NUMBER: {currentOrderNumber}");
-            lbDisplay.Items.Add($"CUSTOMER: {txtName.Text.Trim()}");
-            lbDisplay.Items.Add($"AGE: {txtAge.Text.Trim()}");
-            lbDisplay.Items.Add($"CONTACT: {txtContact.Text.Trim()}");
-            lbDisplay.Items.Add("═══════════════════════════════════════════════");
-            lbDisplay.Items.Add("");
-            lbDisplay.Items.Add("GAMES ORDERED:");
-            lbDisplay.Items.Add("───────────────────────────────────────────────");
-
-            // Add items and calculate total
-            decimal runningTotal = 0; // Calculate fresh total
-            int itemNumber = 1;
-            foreach (var item in orderItems)
-            {
-                string duration = item.Duration >= 60 ? $"{item.Duration / 60} hr" : $"{item.Duration} min";
-
-                lbDisplay.Items.Add($"{itemNumber}. {item.GameName}");
-                lbDisplay.Items.Add($"   Duration: {duration}");
-                lbDisplay.Items.Add($"   Price: ₱{item.Price:N2}");
-                lbDisplay.Items.Add("");
-
-                runningTotal += item.Price; // Add to running total
-                itemNumber++;
-            }
-
-            lbDisplay.Items.Add("───────────────────────────────────────────────");
-            lbDisplay.Items.Add($"TOTAL AMOUNT: ₱{runningTotal:N2}"); // Use runningTotal instead of totalAmount
-            lbDisplay.Items.Add("═══════════════════════════════════════════════");
-        }
-
-        // ============ CALCULATE PRICE ============
-        private decimal CalculatePrice(string gameName, int minutes)
-        {
-            if (!priceList.ContainsKey(gameName))
-            {
-                System.Diagnostics.Debug.WriteLine($"WARNING: Game '{gameName}' not found in price list!");
-                return 0;
-            }
-
-            var prices = priceList[gameName];
-            decimal price;
-
-            switch (minutes)
-            {
-                case 30:
-                    price = prices.min30;
-                    break;
-                case 60:
-                    price = prices.hour1;
-                    break;
-                default:
-                    // Calculate proportionally for other durations
-                    // Based on hourly rate
-                    decimal hourlyRate = prices.hour1;
-                    decimal hours = minutes / 60.0m;
-                    price = hourlyRate * hours;
-                    break;
-            }
-
-            System.Diagnostics.Debug.WriteLine($"Price: {gameName}, {minutes} min = ₱{price:N2}");
-
-            return price;
-        }
-
-
-        // ============ REMOVE BUTTON ============
+        // ============ BUTTON ACTIONS ============
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            if (orderItems.Count == 0)
+            if (!orderManager.HasItems())
             {
                 MessageBox.Show("No items to remove!", "Empty Order",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            DialogResult result = MessageBox.Show(
-                "Remove the last item from order?",
-                "Remove Item",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question
-            );
-
-            if (result == DialogResult.Yes)
+            if (MessageBox.Show("Remove last item?", "Remove Item",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                orderItems.RemoveAt(orderItems.Count - 1);
-
-                // IMPORTANT: Update total before updating display
+                orderManager.RemoveLastItem();
                 UpdateTotalDisplay();
                 UpdateListBoxDisplay();
-
-                MessageBox.Show("Item removed from order!", "Item Removed",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
-        // ============ PAY TO CASHIER BUTTON ============
-        private void btnPayCashier_Click(object sender, EventArgs e)
-        {
-            // Validate order
-            if (orderItems.Count == 0)
-            {
-                MessageBox.Show("Please add at least one game to your order!", "No Games Selected",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Validate customer information
-            if (string.IsNullOrWhiteSpace(txtName.Text))
-            {
-                MessageBox.Show("Please enter customer name!", "Missing Information",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtName.Focus();
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtContact.Text))
-            {
-                MessageBox.Show("Please enter contact number!", "Missing Information",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtContact.Focus();
-                return;
-            }
-
-            try
-            {
-                // Save order to database
-                SaveOrderToDatabase();
-
-                // Generate order slip PDF
-                GenerateOrderSlipPDF();
-
-                // Show confirmation
-                MessageBox.Show(
-                    $"Order submitted successfully!\n\n" +
-                    $"Order Number: {currentOrderNumber}\n" +
-                    $"Customer: {txtName.Text}\n" +
-                    $"Total Items: {orderItems.Count}\n" +
-                    $"Total Amount: ₱{totalAmount:N2}\n\n" +
-                    "Order slip has been generated.\n" +
-                    "Please proceed to the cashier for payment!",
-                    "Order Submitted",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information
-                );
-
-                // Clear form for next customer
-                ClearForm();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error submitting order: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            // Clear without confirmation (use for testing or if user prefers)
-            orderItems.Clear();
+            orderManager.ClearOrder();
             lbDisplay.Items.Clear();
-            totalAmount = 0;
-            lblTotalValue.Text = "₱0.00";
+            UpdateTotalDisplay();
             ResetGameButtonColors();
             ResetDurationButtonColors();
-            selectedGameType = "";
-            selectedDuration = 0;
-
-            System.Diagnostics.Debug.WriteLine("Quick clear executed");
         }
 
-        // ============ SAVE ORDER TO DATABASE ============
+        private void btnPayCashier_Click(object sender, EventArgs e)
+        {
+            if (!orderManager.HasItems())
+            {
+                MessageBox.Show("Please add games to order!", "No Items",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                SaveOrderToDatabase();
+                GenerateOrderSlipPDF();
+
+                MessageBox.Show(
+                    $"Order #{orderManager.OrderNumber} submitted!\n" +
+                    $"Items: {orderManager.Items.Count}\n" +
+                    $"Total: ₱{orderManager.TotalAmount:N2}\n\n" +
+                    "Please proceed to cashier!",
+                    "Order Submitted",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                ClearForm();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ClearForm()
+        {
+            orderManager.ClearAll();
+            lbDisplay.Items.Clear();
+            UpdateOrderNumberDisplay();
+            UpdateTotalDisplay();
+            ResetGameButtonColors();
+            ResetDurationButtonColors();
+        }
+
+        // ============ DATABASE ============
         private void SaveOrderToDatabase()
         {
             using (var conn = new MySqlConnection(Database.ConnectionString))
             {
                 conn.Open();
 
-                // Save customer order
+                // Save order
                 string orderQuery = @"
-                    INSERT INTO orders 
-                    (order_number, customer_name, customer_age, customer_contact, 
-                     total_amount, order_date, status)
-                    VALUES 
-                    (@orderNo, @name, @age, @contact, @total, NOW(), 'Pending')";
+                    INSERT INTO orders (order_number, customer_name, total_amount, order_date, status)
+                    VALUES (@orderNo, @name, @total, @date, 'Pending')";
 
                 using (var cmd = new MySqlCommand(orderQuery, conn))
                 {
-                    cmd.Parameters.AddWithValue("@orderNo", currentOrderNumber);
-                    cmd.Parameters.AddWithValue("@name", txtName.Text.Trim());
-                    cmd.Parameters.AddWithValue("@age", string.IsNullOrEmpty(txtAge.Text) ?
-                        (object)DBNull.Value : txtAge.Text.Trim());
-                    cmd.Parameters.AddWithValue("@contact", txtContact.Text.Trim());
-                    cmd.Parameters.AddWithValue("@total", totalAmount);
-
+                    cmd.Parameters.AddWithValue("@orderNo", orderManager.OrderNumber);
+                    cmd.Parameters.AddWithValue("@name", "Walk-in Customer");
+                    cmd.Parameters.AddWithValue("@total", orderManager.TotalAmount);
+                    cmd.Parameters.AddWithValue("@date", DateTime.Now);
                     cmd.ExecuteNonQuery();
                 }
 
-                // Save order items
-                foreach (var item in orderItems)
+                // Save items
+                foreach (var item in orderManager.Items)
                 {
                     string itemQuery = @"
-                        INSERT INTO order_items 
-                        (order_number, game_name, duration_minutes, price)
-                        VALUES 
-                        (@orderNo, @game, @duration, @price)";
+                        INSERT INTO order_items (order_number, game_name, duration_minutes, price, equipment_cost)
+                        VALUES (@orderNo, @game, @duration, @price, @equipCost)";
 
                     using (var cmd = new MySqlCommand(itemQuery, conn))
                     {
-                        cmd.Parameters.AddWithValue("@orderNo", currentOrderNumber);
+                        cmd.Parameters.AddWithValue("@orderNo", orderManager.OrderNumber);
                         cmd.Parameters.AddWithValue("@game", item.GameName);
                         cmd.Parameters.AddWithValue("@duration", item.Duration);
-                        cmd.Parameters.AddWithValue("@price", item.Price);
-
+                        cmd.Parameters.AddWithValue("@price", item.GamePrice);
+                        cmd.Parameters.AddWithValue("@equipCost", item.EquipmentCost);
                         cmd.ExecuteNonQuery();
                     }
                 }
             }
         }
 
-        // ============ GENERATE ORDER SLIP PDF ============
+        // ============ PDF GENERATION ============
         private void GenerateOrderSlipPDF()
         {
             string folderPath = Path.Combine(
@@ -499,117 +359,47 @@ namespace KGHCashierPOS
             );
             Directory.CreateDirectory(folderPath);
 
-            string filePath = Path.Combine(folderPath, $"{currentOrderNumber}.pdf");
+            string filePath = Path.Combine(folderPath, $"{orderManager.OrderNumber}.pdf");
 
-            Document document = new Document(new iTextSharp.text.Rectangle(226.77f, 246.93f));
-            PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
-            document.SetMargins(10f, 10f, 10f, 10f);
-            document.Open();
+            using (FileStream fs = new FileStream(filePath, FileMode.Create))
+            {
+                Document doc = new Document(PageSize.A5);
+                PdfWriter.GetInstance(doc, fs);
+                doc.Open();
 
-            iTextSharp.text.Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
-            iTextSharp.text.Font subHeaderFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-            iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
-            iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
-            iTextSharp.text.Font smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
+                iTextSharp.text.Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
+                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 12);
+                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
 
-            // HEADER
-            iTextSharp.text.Paragraph title = new iTextSharp.text.Paragraph("MATCH POINT", headerFont);
-            title.Alignment = iTextSharp.text.Element.ALIGN_CENTER;
-            document.Add(title);
+                Paragraph title = new Paragraph("MATCH POINT GAMING HUB", titleFont);
+                title.Alignment = Element.ALIGN_CENTER;
+                doc.Add(title);
+                doc.Add(new Paragraph("\n"));
 
-            iTextSharp.text.Paragraph subtitle = new iTextSharp.text.Paragraph("GAMING HUB", subHeaderFont);
-            subtitle.Alignment = iTextSharp.text.Element.ALIGN_CENTER;
-            document.Add(subtitle);
+                doc.Add(new Paragraph($"Order: {orderManager.OrderNumber}", normalFont));
+                doc.Add(new Paragraph($"Date: {DateTime.Now:MMMM dd, yyyy hh:mm tt}", normalFont));
+                doc.Add(new Paragraph("\n" + new string('-', 50) + "\n"));
 
-            document.Add(new iTextSharp.text.Paragraph(" "));
+                int num = 1;
+                foreach (var item in orderManager.Items)
+                {
+                    doc.Add(new Paragraph($"{num}. {item.GameName} - {item.GetDurationText()}", normalFont));
+                    doc.Add(new Paragraph($"   ₱{item.GamePrice:N2}", normalFont));
 
-            iTextSharp.text.Paragraph orderSlipHeader = new iTextSharp.text.Paragraph("ORDER SLIP", boldFont);
-            orderSlipHeader.Alignment = iTextSharp.text.Element.ALIGN_CENTER;
-            document.Add(orderSlipHeader);
+                    if (item.EquipmentCost > 0)
+                    {
+                        doc.Add(new Paragraph($"   Equipment: ₱{item.EquipmentCost:N2}", normalFont));
+                    }
 
-            document.Add(new iTextSharp.text.Paragraph("═══════════════════════════", normalFont));
+                    doc.Add(new Paragraph("\n"));
+                    num++;
+                }
 
-            // ORDER INFO
-            document.Add(new iTextSharp.text.Paragraph($"Order No: {currentOrderNumber}", normalFont));
-            document.Add(new iTextSharp.text.Paragraph($"Date: {DateTime.Now:MM/dd/yyyy hh:mm tt}", normalFont));
-            document.Add(new iTextSharp.text.Paragraph($"Customer: {txtName.Text.Trim()}", normalFont));
+                doc.Add(new Paragraph(new string('-', 50)));
+                doc.Add(new Paragraph($"TOTAL: ₱{orderManager.TotalAmount:N2}", boldFont));
 
-            if (!string.IsNullOrEmpty(txtAge.Text))
-                document.Add(new iTextSharp.text.Paragraph($"Age: {txtAge.Text.Trim()}", normalFont));
-
-            document.Add(new iTextSharp.text.Paragraph($"Contact: {txtContact.Text.Trim()}", normalFont));
-
-            document.Add(new iTextSharp.text.Paragraph("═══════════════════════════", normalFont));
-            document.Add(new iTextSharp.text.Paragraph(" "));
-
-            // TOTAL
-            iTextSharp.text.Paragraph totalPara = new iTextSharp.text.Paragraph(
-                $"TOTAL AMOUNT: ₱{totalAmount:N2}", boldFont);
-            totalPara.Alignment = iTextSharp.text.Element.ALIGN_RIGHT;
-            document.Add(totalPara);
-
-            document.Add(new iTextSharp.text.Paragraph("═══════════════════════════", normalFont));
-            document.Add(new iTextSharp.text.Paragraph(" "));
-
-
-            document.Close();
-
-            // Open the PDF
-            System.Diagnostics.Process.Start(filePath);
+                doc.Close();
+            }
         }
-
-        // ============ CLEAR ORDER ============
-        private void ClearOrder()
-        {
-            orderItems.Clear();
-            lbDisplay.Items.Clear();
-            totalAmount = 0;
-            lblTotalValue.Text = "₱0.00";
-
-            MessageBox.Show("Order cleared!", "Order Cleared",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        // ============ CLEAR FORM ============
-        private void ClearForm()
-        {
-            // Clear customer info
-            txtName.Clear();
-            txtAge.Clear();
-            txtContact.Clear();
-
-            // Clear order
-            orderItems.Clear();
-            lbDisplay.Items.Clear();
-
-            // Reset buttons
-            ResetGameButtonColors();
-            btn30min.BackColor = Color.Orange;
-            btn1hour.BackColor = Color.FromArgb(64, 64, 64);
-
-            // Reset variables
-            selectedGameType = "";
-            selectedDuration = 30;
-            totalAmount = 0;
-
-            // Update display
-            lblTotalValue.Text = "₱0.00";
-
-            // Generate new order number
-            GenerateOrderNumber();
-
-            // Focus on name field
-            txtName.Focus();
-        }
-    }
-
-    // ============ ORDER ITEM CLASS ============
-    public class OrderItem
-    {
-        public string OrderNumber { get; set; }
-        public string CustomerName { get; set; }
-        public string GameName { get; set; }
-        public int Duration { get; set; }
-        public decimal Price { get; set; }
     }
 }
