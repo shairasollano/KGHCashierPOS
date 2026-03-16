@@ -88,7 +88,7 @@
             // 
             this.txtCashReceived.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtCashReceived.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
-            this.txtCashReceived.Location = new System.Drawing.Point(150, 258);
+            this.txtCashReceived.Location = new System.Drawing.Point(145, 384);
             this.txtCashReceived.Name = "txtCashReceived";
             this.txtCashReceived.Size = new System.Drawing.Size(258, 44);
             this.txtCashReceived.TabIndex = 72;
@@ -99,7 +99,7 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.Control;
-            this.label1.Location = new System.Drawing.Point(150, 224);
+            this.label1.Location = new System.Drawing.Point(145, 350);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(146, 28);
             this.label1.TabIndex = 73;
@@ -110,7 +110,7 @@
             this.lblChange.AutoSize = true;
             this.lblChange.Font = new System.Drawing.Font("Nirmala Text", 10F);
             this.lblChange.ForeColor = System.Drawing.Color.Red;
-            this.lblChange.Location = new System.Drawing.Point(227, 324);
+            this.lblChange.Location = new System.Drawing.Point(222, 450);
             this.lblChange.Name = "lblChange";
             this.lblChange.Size = new System.Drawing.Size(100, 28);
             this.lblChange.TabIndex = 74;
@@ -121,7 +121,7 @@
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.ForeColor = System.Drawing.SystemColors.Control;
-            this.label2.Location = new System.Drawing.Point(150, 324);
+            this.label2.Location = new System.Drawing.Point(145, 450);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(93, 28);
             this.label2.TabIndex = 75;
@@ -132,7 +132,7 @@
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.SystemColors.Control;
-            this.label3.Location = new System.Drawing.Point(151, 394);
+            this.label3.Location = new System.Drawing.Point(146, 520);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(251, 28);
             this.label3.TabIndex = 76;
@@ -142,7 +142,7 @@
             // 
             this.txtGcashRef.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtGcashRef.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
-            this.txtGcashRef.Location = new System.Drawing.Point(155, 425);
+            this.txtGcashRef.Location = new System.Drawing.Point(150, 551);
             this.txtGcashRef.Name = "txtGcashRef";
             this.txtGcashRef.Size = new System.Drawing.Size(258, 44);
             this.txtGcashRef.TabIndex = 77;
@@ -304,14 +304,13 @@
             this.rtbSummary.Location = new System.Drawing.Point(35, 30);
             this.rtbSummary.Margin = new System.Windows.Forms.Padding(15, 3, 3, 3);
             this.rtbSummary.Name = "rtbSummary";
-            this.rtbSummary.Size = new System.Drawing.Size(307, 439);
+            this.rtbSummary.Size = new System.Drawing.Size(307, 547);
             this.rtbSummary.TabIndex = 112;
             this.rtbSummary.Text = "";
             // 
             // panel1
             // 
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
-            this.panel1.Controls.Add(this.panel2);
             this.panel1.Controls.Add(this.rtbSummary);
             this.panel1.Location = new System.Drawing.Point(24, 24);
             this.panel1.Name = "panel1";
@@ -327,7 +326,7 @@
             this.panel2.Controls.Add(this.lblTotalAmountTitle);
             this.panel2.Controls.Add(this.lblTotalAmount);
             this.panel2.Controls.Add(this.lblDiscountTitle);
-            this.panel2.Location = new System.Drawing.Point(35, 482);
+            this.panel2.Location = new System.Drawing.Point(43, 30);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(307, 117);
             this.panel2.TabIndex = 114;
@@ -338,7 +337,7 @@
             this.panel3.Controls.Add(this.rbCash);
             this.panel3.Controls.Add(this.rbGCash);
             this.panel3.Controls.Add(this.lblPaymentMethodTitle);
-            this.panel3.Location = new System.Drawing.Point(48, 53);
+            this.panel3.Location = new System.Drawing.Point(43, 200);
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(360, 124);
             this.panel3.TabIndex = 115;
@@ -346,6 +345,7 @@
             // panel4
             // 
             this.panel4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.panel4.Controls.Add(this.panel2);
             this.panel4.Controls.Add(this.lblChange);
             this.panel4.Controls.Add(this.label7);
             this.panel4.Controls.Add(this.txtDiscountAmount);
@@ -395,7 +395,7 @@
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.ForeColor = System.Drawing.SystemColors.Control;
-            this.label5.Location = new System.Drawing.Point(44, 409);
+            this.label5.Location = new System.Drawing.Point(39, 535);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(95, 42);
             this.label5.TabIndex = 116;
@@ -406,7 +406,7 @@
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Nirmala Text", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.ForeColor = System.Drawing.SystemColors.Control;
-            this.label4.Location = new System.Drawing.Point(44, 258);
+            this.label4.Location = new System.Drawing.Point(39, 384);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(81, 42);
             this.label4.TabIndex = 111;

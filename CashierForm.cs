@@ -12,6 +12,7 @@ namespace KGHCashierPOS
 
     public partial class CashierForm : Form
     {
+        private paymentControl1 paymentControl1;
 
         Dictionary<string, GameSession> activeSessions =
           new Dictionary<string, GameSession>();

@@ -19,7 +19,7 @@ namespace KGHCashierPOS.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -63,9 +63,9 @@ namespace KGHCashierPOS.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap _1_HOUR {
+        internal static System.Drawing.Bitmap _1HOUR {
             get {
-                object obj = ResourceManager.GetObject("1 HOUR", resourceCulture);
+                object obj = ResourceManager.GetObject("1HOUR", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,19 @@ namespace KGHCashierPOS.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap _30_MINUTES {
+        internal static System.Drawing.Bitmap _30MINS {
             get {
-                object obj = ResourceManager.GetObject("30 MINUTES", resourceCulture);
+                object obj = ResourceManager.GetObject("30MINS", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap _30MINS1 {
+            get {
+                object obj = ResourceManager.GetObject("30MINS1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -103,16 +113,6 @@ namespace KGHCashierPOS.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap MATCHPOINT {
-            get {
-                object obj = ResourceManager.GetObject("MATCHPOINT", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap SCOOTER {
             get {
                 object obj = ResourceManager.GetObject("SCOOTER", resourceCulture);
@@ -123,9 +123,9 @@ namespace KGHCashierPOS.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap TABLE_TENNIS {
+        internal static System.Drawing.Bitmap TABLETENNIS {
             get {
-                object obj = ResourceManager.GetObject("TABLE TENNIS", resourceCulture);
+                object obj = ResourceManager.GetObject("TABLETENNIS", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

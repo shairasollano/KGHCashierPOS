@@ -87,6 +87,7 @@ C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.extratodelete.r
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.NumericKeyboardControl.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.OrderForm.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.paymentControl1.resources
+C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.Properties.Resources.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.csproj.GenerateResource.cache
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.csproj.CoreCompileInputs.cache
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashi.BF22D446.Up2Date
