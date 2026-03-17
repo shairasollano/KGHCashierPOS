@@ -1,10 +1,5 @@
-﻿using iTextSharp.text;
-using iTextSharp.text.pdf;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 
 namespace KGHCashierPOS
@@ -27,8 +22,25 @@ namespace KGHCashierPOS
         {
             UpdateOrderNumberDisplay();
             UpdateTotalDisplay();
-            ResetGameButtonColors();
-            ResetDurationButtonColors();
+            InitializeButtonStyles();
+        }
+
+        private void InitializeButtonStyles()
+        {
+            // Game buttons
+            ButtonStyleHelper.ApplyGameButtonStyle(btnBilliards);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnScooter);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnBadminton);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnTableTennis);
+
+            // Duration buttons
+            ButtonStyleHelper.ApplyDurationButtonStyle(btn30min);
+            ButtonStyleHelper.ApplyDurationButtonStyle(btn1hour);
+
+            // Action buttons
+            ButtonStyleHelper.ApplyActionButtonStyle(btnPayCashier, Color.FromArgb(76, 175, 80)); // Green
+            ButtonStyleHelper.ApplyActionButtonStyle(btnClear, Color.FromArgb(244, 67, 54)); // Red
+            ButtonStyleHelper.ApplyActionButtonStyle(btnRemove, Color.FromArgb(255, 152, 0)); // Orange
         }
 
         private void OrderForm_Load(object sender, EventArgs e)
@@ -50,7 +62,7 @@ namespace KGHCashierPOS
 
         private void UpdateTotalDisplay()
         {
-            lblTotalValue.Text = "₱" + orderManager.TotalAmount.ToString("N2");
+            lblTotalValue.Text = PriceFormatter.Format(orderManager.TotalAmount);
         }
 
         private void UpdateListBoxDisplay()
@@ -71,9 +83,9 @@ namespace KGHCashierPOS
             {
                 lbDisplay.Items.Add($"{itemNumber}. {item.GameName}");
                 lbDisplay.Items.Add($"   Duration: {item.GetDurationText()}");
-                lbDisplay.Items.Add($"   Game Price: ₱{item.GamePrice:N2}");
+                lbDisplay.Items.Add($"   Game Price: {PriceFormatter.Format(item.GamePrice)}");
 
-                // Equipment
+                // Equipment details
                 if (item.Equipment.Count > 0)
                 {
                     lbDisplay.Items.Add($"   Equipment:");
@@ -85,22 +97,22 @@ namespace KGHCashierPOS
                         }
                         if (eq.RentalQuantity > 0)
                         {
-                            lbDisplay.Items.Add($"     • {eq.Name} x{eq.RentalQuantity} ({eq.Type}) - ₱{eq.TotalCost:N2}");
+                            lbDisplay.Items.Add($"     • {eq.Name} x{eq.RentalQuantity} ({eq.Type}) - {PriceFormatter.Format(eq.TotalCost)}");
                         }
                     }
                     if (item.EquipmentCost > 0)
                     {
-                        lbDisplay.Items.Add($"   Equipment Cost: ₱{item.EquipmentCost:N2}");
+                        lbDisplay.Items.Add($"   Equipment Cost: {PriceFormatter.Format(item.EquipmentCost)}");
                     }
                 }
 
-                lbDisplay.Items.Add($"   Total: ₱{item.TotalPrice:N2}");
+                lbDisplay.Items.Add($"   Total: {PriceFormatter.Format(item.TotalPrice)}");
                 lbDisplay.Items.Add("");
                 itemNumber++;
             }
 
             lbDisplay.Items.Add("───────────────────────────────────────────────");
-            lbDisplay.Items.Add($"TOTAL AMOUNT: ₱{orderManager.TotalAmount:N2}");
+            lbDisplay.Items.Add($"TOTAL AMOUNT: {PriceFormatter.Format(orderManager.TotalAmount)}");
             lbDisplay.Items.Add("═══════════════════════════════════════════════");
         }
 
@@ -129,38 +141,35 @@ namespace KGHCashierPOS
         {
             orderManager.SelectedGame = gameName;
             ResetGameButtonColors();
-            clickedButton.BackColor = Color.Orange;
+            clickedButton.BackColor = ButtonStyleHelper.SelectedColor;
         }
 
         private void ResetGameButtonColors()
         {
-            btnBilliards.BackColor = Color.FromArgb(64, 64, 64);
-            btnScooter.BackColor = Color.FromArgb(64, 64, 64);
-            btnBadminton.BackColor = Color.FromArgb(64, 64, 64);
-            btnTableTennis.BackColor = Color.FromArgb(64, 64, 64);
+            ButtonStyleHelper.ResetGameButtons(btnBilliards, btnScooter, btnBadminton, btnTableTennis);
         }
 
         // ============ DURATION SELECTION ============
         private void btn30min_Click(object sender, EventArgs e)
         {
             orderManager.SelectedDuration = 30;
-            btn30min.BackColor = Color.Orange;
-            btn1hour.BackColor = Color.FromArgb(64, 64, 64);
+            btn30min.BackColor = ButtonStyleHelper.SelectedColor;
+            btn1hour.BackColor = ButtonStyleHelper.DefaultColor;
             TryAddGameToOrder();
         }
 
         private void btn1hour_Click(object sender, EventArgs e)
         {
             orderManager.SelectedDuration = 60;
-            btn1hour.BackColor = Color.Orange;
-            btn30min.BackColor = Color.FromArgb(64, 64, 64);
+            btn1hour.BackColor = ButtonStyleHelper.SelectedColor;
+            btn30min.BackColor = ButtonStyleHelper.DefaultColor;
             TryAddGameToOrder();
         }
 
         private void ResetDurationButtonColors()
         {
-            btn30min.BackColor = Color.FromArgb(64, 64, 64);
-            btn1hour.BackColor = Color.FromArgb(64, 64, 64);
+            btn30min.BackColor = ButtonStyleHelper.DefaultColor;
+            btn1hour.BackColor = ButtonStyleHelper.DefaultColor;
         }
 
         // ============ ADD TO ORDER ============
@@ -187,11 +196,11 @@ namespace KGHCashierPOS
         {
             if (!orderManager.HasEquipment(orderManager.SelectedGame))
             {
-                AddGameToOrder(new List<Equipment>(), 0);
+                AddGameToOrder(new System.Collections.Generic.List<Equipment>(), 0);
                 return;
             }
 
-            List<Equipment> equipment = orderManager.GetEquipmentForGame(orderManager.SelectedGame);
+            var equipment = orderManager.GetEquipmentForGame(orderManager.SelectedGame);
 
             using (var dialog = new EquipmentSelectionDialog(orderManager.SelectedGame, equipment))
             {
@@ -199,10 +208,10 @@ namespace KGHCashierPOS
                 {
                     AddGameToOrder(dialog.SelectedEquipment, dialog.TotalEquipmentCost);
                 }
-            } 
+            }
         }
 
-        private void AddGameToOrder(List<Equipment> equipment, decimal equipmentCost)
+        private void AddGameToOrder(System.Collections.Generic.List<Equipment> equipment, decimal equipmentCost)
         {
             decimal gamePrice = orderManager.CalculateGamePrice(
                 orderManager.SelectedGame,
@@ -223,11 +232,11 @@ namespace KGHCashierPOS
             UpdateTotalDisplay();
             UpdateListBoxDisplay();
 
-            string equipText = equipmentCost > 0 ? $"\nEquipment: ₱{equipmentCost:N2}" : "";
+            string equipText = equipmentCost > 0 ? $"\nEquipment: {PriceFormatter.Format(equipmentCost)}" : "";
             MessageBox.Show(
                 $"{item.GameName} ({item.GetDurationText()}) added!\n" +
-                $"Game: ₱{gamePrice:N2}" + equipText +
-                $"\nTotal: ₱{item.TotalPrice:N2}",
+                $"Game: {PriceFormatter.Format(gamePrice)}" + equipText +
+                $"\nTotal: {PriceFormatter.Format(item.TotalPrice)}",
                 "Game Added",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information
@@ -259,11 +268,25 @@ namespace KGHCashierPOS
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            orderManager.ClearOrder();
-            lbDisplay.Items.Clear();
-            UpdateTotalDisplay();
-            ResetGameButtonColors();
-            ResetDurationButtonColors();
+            if (!orderManager.HasItems())
+            {
+                MessageBox.Show("Order is already empty!", "No Items",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show("Clear all items?", "Clear Order",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                orderManager.ClearOrder();
+                lbDisplay.Items.Clear();
+                UpdateTotalDisplay();
+                ResetGameButtonColors();
+                ResetDurationButtonColors();
+
+                MessageBox.Show("Order cleared!", "Cleared",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void btnPayCashier_Click(object sender, EventArgs e)
@@ -277,14 +300,27 @@ namespace KGHCashierPOS
 
             try
             {
-                SaveOrderToDatabase();
-                GenerateOrderSlipPDF();
+                System.Diagnostics.Debug.WriteLine($"=== Saving order: {orderManager.OrderNumber} ===");
+
+                // Save to database using repository
+                OrderRepository.SaveOrder(
+                    orderManager.OrderNumber,
+                    orderManager.TotalAmount,
+                    orderManager.Items
+                );
+
+                // Generate PDF
+                PDFGenerator.GenerateOrderSlip(
+                    orderManager.OrderNumber,
+                    orderManager.Items,
+                    orderManager.TotalAmount
+                );
 
                 MessageBox.Show(
-                    $"Order #{orderManager.OrderNumber} submitted!\n" +
+                    $"Order #{orderManager.OrderNumber} submitted!\n\n" +
                     $"Items: {orderManager.Items.Count}\n" +
-                    $"Total: ₱{orderManager.TotalAmount:N2}\n\n" +
-                    "Please proceed to cashier!",
+                    $"Total: {PriceFormatter.Format(orderManager.TotalAmount)}\n\n" +
+                    "Order slip generated.\nPlease proceed to cashier!",
                     "Order Submitted",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
@@ -294,8 +330,14 @@ namespace KGHCashierPOS
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    $"Error saving order:\n{ex.Message}\n\nPlease try again.",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+
+                System.Diagnostics.Debug.WriteLine($"❌ SaveOrder Exception: {ex.Message}");
             }
         }
 
@@ -307,99 +349,6 @@ namespace KGHCashierPOS
             UpdateTotalDisplay();
             ResetGameButtonColors();
             ResetDurationButtonColors();
-        }
-
-        // ============ DATABASE ============
-        private void SaveOrderToDatabase()
-        {
-            using (var conn = new MySqlConnection(Database.ConnectionString))
-            {
-                conn.Open();
-
-                // Save order
-                string orderQuery = @"
-                    INSERT INTO orders (order_number, customer_name, total_amount, order_date, status)
-                    VALUES (@orderNo, @name, @total, @date, 'Pending')";
-
-                using (var cmd = new MySqlCommand(orderQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@orderNo", orderManager.OrderNumber);
-                    cmd.Parameters.AddWithValue("@name", "Walk-in Customer");
-                    cmd.Parameters.AddWithValue("@total", orderManager.TotalAmount);
-                    cmd.Parameters.AddWithValue("@date", DateTime.Now);
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Save items
-                foreach (var item in orderManager.Items)
-                {
-                    string itemQuery = @"
-                        INSERT INTO order_items (order_number, game_name, duration_minutes, price, equipment_cost)
-                        VALUES (@orderNo, @game, @duration, @price, @equipCost)";
-
-                    using (var cmd = new MySqlCommand(itemQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@orderNo", orderManager.OrderNumber);
-                        cmd.Parameters.AddWithValue("@game", item.GameName);
-                        cmd.Parameters.AddWithValue("@duration", item.Duration);
-                        cmd.Parameters.AddWithValue("@price", item.GamePrice);
-                        cmd.Parameters.AddWithValue("@equipCost", item.EquipmentCost);
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-            }
-        }
-
-        // ============ PDF GENERATION ============
-        private void GenerateOrderSlipPDF()
-        {
-            string folderPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "MatchPointOrders"
-            );
-            Directory.CreateDirectory(folderPath);
-
-            string filePath = Path.Combine(folderPath, $"{orderManager.OrderNumber}.pdf");
-
-            using (FileStream fs = new FileStream(filePath, FileMode.Create))
-            {
-                Document doc = new Document(PageSize.A5);
-                PdfWriter.GetInstance(doc, fs);
-                doc.Open();
-
-                iTextSharp.text.Font titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18);
-                iTextSharp.text.Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 12);
-                iTextSharp.text.Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-
-                Paragraph title = new Paragraph("MATCH POINT GAMING HUB", titleFont);
-                title.Alignment = Element.ALIGN_CENTER;
-                doc.Add(title);
-                doc.Add(new Paragraph("\n"));
-
-                doc.Add(new Paragraph($"Order: {orderManager.OrderNumber}", normalFont));
-                doc.Add(new Paragraph($"Date: {DateTime.Now:MMMM dd, yyyy hh:mm tt}", normalFont));
-                doc.Add(new Paragraph("\n" + new string('-', 50) + "\n"));
-
-                int num = 1;
-                foreach (var item in orderManager.Items)
-                {
-                    doc.Add(new Paragraph($"{num}. {item.GameName} - {item.GetDurationText()}", normalFont));
-                    doc.Add(new Paragraph($"   ₱{item.GamePrice:N2}", normalFont));
-
-                    if (item.EquipmentCost > 0)
-                    {
-                        doc.Add(new Paragraph($"   Equipment: ₱{item.EquipmentCost:N2}", normalFont));
-                    }
-
-                    doc.Add(new Paragraph("\n"));
-                    num++;
-                }
-
-                doc.Add(new Paragraph(new string('-', 50)));
-                doc.Add(new Paragraph($"TOTAL: ₱{orderManager.TotalAmount:N2}", boldFont));
-
-                doc.Close();
-            }
         }
     }
 }

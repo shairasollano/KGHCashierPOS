@@ -230,6 +230,7 @@
             // btnBilliards
             // 
             this.btnBilliards.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btnBilliards.BackgroundImage = global::KGHCashierPOS.Properties.Resources.BILLIARDS;
             this.btnBilliards.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnBilliards.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnBilliards.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -245,6 +246,7 @@
             // btnTableTennis
             // 
             this.btnTableTennis.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btnTableTennis.BackgroundImage = global::KGHCashierPOS.Properties.Resources.TABLETENNIS;
             this.btnTableTennis.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnTableTennis.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnTableTennis.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -260,6 +262,7 @@
             // btnScooter
             // 
             this.btnScooter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btnScooter.BackgroundImage = global::KGHCashierPOS.Properties.Resources.SCOOTER;
             this.btnScooter.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnScooter.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnScooter.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -275,6 +278,7 @@
             // btnBadminton
             // 
             this.btnBadminton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btnBadminton.BackgroundImage = global::KGHCashierPOS.Properties.Resources.BADMINTON;
             this.btnBadminton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btnBadminton.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btnBadminton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -314,6 +318,7 @@
             // btn30min
             // 
             this.btn30min.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btn30min.BackgroundImage = global::KGHCashierPOS.Properties.Resources._30MINS;
             this.btn30min.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btn30min.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btn30min.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
@@ -329,6 +334,7 @@
             // btn1hour
             // 
             this.btn1hour.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
+            this.btn1hour.BackgroundImage = global::KGHCashierPOS.Properties.Resources._1HOUR;
             this.btn1hour.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.btn1hour.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));
             this.btn1hour.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(177)))), ((int)(((byte)(56)))));

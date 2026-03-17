@@ -32,6 +32,11 @@ namespace KGHCashierPOS
         public string OrderNumber { get; set; }
         public string GameType { get; set; }
 
+        // FOR EQUIPMENT
+        public List<Equipment> Equipment { get; set; } = new List<Equipment>();
+        public decimal EquipmentCost { get; set; } = 0;
+        public decimal GrandTotal => TotalPrice + EquipmentCost;
+
     }
 
 }

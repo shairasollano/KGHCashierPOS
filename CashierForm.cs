@@ -1,195 +1,215 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace KGHCashierPOS
 {
-    using MySqlX.XDevAPI;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Windows.Forms;
-
-
     public partial class CashierForm : Form
     {
-        private paymentControl1 paymentControl1;
-
-        Dictionary<string, GameSession> activeSessions =
-          new Dictionary<string, GameSession>();
-
-        string selectedGame = "";
-        decimal totalAmount = 0;
-
-        Dictionary<string, (decimal min30, decimal hour1)> priceList =
-            new Dictionary<string, (decimal, decimal)>()
-            {
-            { "Billiards", (80, 150) },
-            { "Scooter", (100, 150) },
-            { "Badminton", (50, 90) },
-            { "Table Tennis", (40, 75) }
-            };
-
+        // ============ MANAGERS ============
+        private CashierSessionManager sessionManager;
         private paymentControl1 paymentControl;
 
+        // ============ CONSTRUCTOR ============
         public CashierForm()
         {
             InitializeComponent();
 
+            sessionManager = new CashierSessionManager();
+
             paymentControl = new paymentControl1();
-            paymentControl.Visible = false;
+            paymentControl.Visible = false;  // ✅ This should already be here
+            paymentControl.Dock = DockStyle.Fill;  // ⭐ ADD THIS - Makes it fill the form
+            paymentControl.BringToFront();  // ⭐ ADD THIS - Ensures it's on top when visible
             paymentControl.PaymentSuccessful += OnPaymentSuccessful;
 
             this.Controls.Add(paymentControl);
+
+            InitializeButtonStyles();
         }
 
+        // ============ INITIALIZATION ============
+        private void InitializeButtonStyles()
+        {
+            // Game buttons
+            ButtonStyleHelper.ApplyGameButtonStyle(btnBilliards);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnScooter);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnBadminton);
+            ButtonStyleHelper.ApplyGameButtonStyle(btnTableTennis);
 
+            // Duration buttons
+            ButtonStyleHelper.ApplyDurationButtonStyle(btn30min);
+            ButtonStyleHelper.ApplyDurationButtonStyle(btn1hour);
 
+            // Action buttons
+            ButtonStyleHelper.ApplyActionButtonStyle(btnProceedPayment, Color.FromArgb(76, 175, 80)); // Green
+            ButtonStyleHelper.ApplyActionButtonStyle(btnRemoveGame, Color.FromArgb(244, 67, 54)); // Red
+            ButtonStyleHelper.ApplyActionButtonStyle(btnClearCashierForm, Color.FromArgb(255, 152, 0)); // Orange
+        }
 
+        private void CashierForm_Load(object sender, EventArgs e)
+        {
+            UpdateDateTime();
+            timerDateTime.Start();
+        }
 
-        // GAME BUTTON CLICK EVENTS
-
+        // ============ GAME SELECTION ============
         private void btnBilliards_Click(object sender, EventArgs e)
         {
-            selectedGame = "Billiards";
-            btnBilliards.BackColor = Color.FromArgb(233, 190, 95);
+            SelectGame("Billiards", btnBilliards);
         }
+
         private void btnScooter_Click(object sender, EventArgs e)
         {
-            selectedGame = "Scooter";
-            btnScooter.BackColor = Color.FromArgb(233, 190, 95);
+            SelectGame("Scooter", btnScooter);
         }
+
         private void btnBadminton_Click(object sender, EventArgs e)
         {
-            selectedGame = "Badminton";
-            btnBadminton.BackColor = Color.FromArgb(233, 190, 95);
+            SelectGame("Badminton", btnBadminton);
         }
+
         private void btnTableTennis_Click(object sender, EventArgs e)
         {
-            selectedGame = "Table Tennis";
-            btnTableTennis.BackColor = Color.FromArgb(233, 190, 95);
+            SelectGame("Table Tennis", btnTableTennis);
         }
 
-        // DURATION BUTTON CLICK EVENTS
+        private void SelectGame(string gameName, Button clickedButton)
+        {
+            sessionManager.SelectedGame = gameName;
+            ResetGameButtonColors();
+            clickedButton.BackColor = ButtonStyleHelper.SelectedColor;
+        }
 
+        private void ResetGameButtonColors()
+        {
+            ButtonStyleHelper.ResetGameButtons(btnBilliards, btnScooter, btnBadminton, btnTableTennis);
+        }
+
+        // ============ DURATION SELECTION ============
         private void btn30Min_Click(object sender, EventArgs e)
         {
             AddDurationToGame(30);
-            btn30min.BackColor = Color.FromArgb(233, 190, 95);
         }
+
         private void btn1Hour_Click(object sender, EventArgs e)
         {
             AddDurationToGame(60);
-            btn1hour.BackColor = Color.FromArgb(233, 190, 95);
         }
-
-
-        // ADD TIME
 
         private void AddDurationToGame(int minutes)
         {
-            if (selectedGame == "")
+            if (string.IsNullOrEmpty(sessionManager.SelectedGame))
             {
-                MessageBox.Show("Please select a game first.");
+                MessageBox.Show("Please select a game first!", "No Game Selected",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            decimal priceToAdd =
-                minutes == 30
-                ? priceList[selectedGame].min30
-                : priceList[selectedGame].hour1;
-
-            // If game already exists → extend
-            if (activeSessions.ContainsKey(selectedGame))
+            // Check for equipment
+            if (sessionManager.HasEquipment(sessionManager.SelectedGame))
             {
-                activeSessions[selectedGame].TotalMinutes += minutes;
-                activeSessions[selectedGame].TotalPrice += priceToAdd;
+                ShowEquipmentSelection(minutes);
             }
             else
             {
-                activeSessions[selectedGame] = new GameSession
-                {
-                    GameName = selectedGame,
-                    TotalMinutes = minutes,
-                    TotalPrice = priceToAdd,
-                    StartTime = DateTime.Now
-                };
+                AddSessionWithoutEquipment(minutes);
             }
-
-            RefreshListView();
         }
 
-        // REFRESH LISTVIEW
+        // ============ EQUIPMENT SELECTION ============
+        private void ShowEquipmentSelection(int minutes)
+        {
+            var equipment = sessionManager.GetEquipmentForGame(sessionManager.SelectedGame);
 
+            using (var dialog = new EquipmentSelectionDialog(sessionManager.SelectedGame, equipment))
+            {
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    sessionManager.AddOrExtendSession(
+                        sessionManager.SelectedGame,
+                        minutes,
+                        dialog.SelectedEquipment,
+                        dialog.TotalEquipmentCost
+                    );
+
+                    RefreshListView();
+                    ResetGameSelection();
+                }
+            }
+        }
+
+        private void AddSessionWithoutEquipment(int minutes)
+        {
+            sessionManager.AddOrExtendSession(
+                sessionManager.SelectedGame,
+                minutes,
+                new List<Equipment>(),
+                0
+            );
+
+            RefreshListView();
+            ResetGameSelection();
+        }
+
+        private void ResetGameSelection()
+        {
+            ResetGameButtonColors();
+            sessionManager.SelectedGame = "";
+        }
+
+        // ============ REFRESH LISTVIEW ============
         private void RefreshListView()
         {
             lvSelectedGames.Items.Clear();
-            totalAmount = 0;
 
-            foreach (var session in activeSessions.Values)
+            foreach (var session in sessionManager.ActiveSessions.Values)
             {
-                // FIX: Use FormatDuration method instead of inline formatting
-                string durationText = FormatDuration(session.TotalMinutes);
+                string durationText = DurationFormatter.Format(session.TotalMinutes);
 
-                // ADDED TIME 3 MINUTE INCREMENT
+                // Set times
                 session.StartTime = DateTime.Now.AddMinutes(3);
                 session.EndTime = session.StartTime.AddMinutes(session.TotalMinutes);
                 session.IsActive = true;
 
+                decimal displayPrice = session.TotalPrice + session.EquipmentCost;
+
                 ListViewItem item = new ListViewItem(session.GameName);
                 item.SubItems.Add(durationText);
-                item.SubItems.Add("₱" + session.TotalPrice.ToString("0.00"));
+                item.SubItems.Add(PriceFormatter.FormatSimple(displayPrice));
                 item.SubItems.Add(session.StartTime.ToString("hh:mm tt"));
                 item.SubItems.Add(session.EndTime.ToString("hh:mm tt"));
-                item.SubItems.Add("₱" + session.TotalPrice.ToString("0.00"));
+                item.SubItems.Add(PriceFormatter.FormatSimple(displayPrice));
 
                 lvSelectedGames.Items.Add(item);
-
-                totalAmount += session.TotalPrice;
             }
 
-            lblTotal.Text = "₱ " + totalAmount.ToString("0.00");
+            lblTotal.Text = "₱ " + sessionManager.TotalAmount.ToString("0.00");
         }
 
-        private string FormatDuration(int totalMinutes)
-        {
-            if (totalMinutes < 60)
-            {
-                // Less than 1 hour: "30 min"
-                return $"{totalMinutes} min";
-            }
-            else
-            {
-                int hours = totalMinutes / 60;
-                int minutes = totalMinutes % 60;
-
-                if (minutes == 0)
-                {
-                    // Exact hours: "1 hr", "2 hr"
-                    return $"{hours} hr";
-                }
-                else
-                {
-                    // Hours + minutes: "1 hr 30 min", "2 hr 30 min"
-                    return $"{hours} hr {minutes} min";
-                }
-            }
-        }
-
-
-        // REMOVE SELECTED GAME
+        // ============ REMOVE GAME ============
         private void btnRemoveGame_Click(object sender, EventArgs e)
         {
             if (lvSelectedGames.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("Please select a game to remove!", "No Selection",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
+            }
 
             string gameName = lvSelectedGames.SelectedItems[0].Text;
 
-            activeSessions.Remove(gameName);
-            RefreshListView();
+            if (MessageBox.Show($"Remove {gameName}?", "Confirm Remove",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                sessionManager.RemoveSession(gameName);
+                RefreshListView();
+            }
         }
 
-        // FUNCTIONS NG BUTTONS SA ORDER KEYPAD
-
+        // ============ ORDER NUMBER KEYPAD ============
         private void NumberButton_Click(object sender, EventArgs e)
         {
             Button btn = sender as Button;
@@ -199,11 +219,11 @@ namespace KGHCashierPOS
         private void btnBackspace_Click(object sender, EventArgs e)
         {
             if (txtOrderNumber.Text.Length > 0)
-                txtOrderNumber.Text =
-                    txtOrderNumber.Text.Substring(0, txtOrderNumber.Text.Length - 1);
+            {
+                txtOrderNumber.Text = txtOrderNumber.Text.Substring(0, txtOrderNumber.Text.Length - 1);
+            }
         }
 
-        // ENTER BUTTON TO LOAD ORDER FROM DATABASE UPDATED
         private void btnEnter_Click(object sender, EventArgs e)
         {
             string orderNumber = txtOrderNumber.Text.Trim();
@@ -216,115 +236,143 @@ namespace KGHCashierPOS
                 return;
             }
 
-            // Remove any non-numeric characters
+            // Format order number
             orderNumber = new string(orderNumber.Where(char.IsDigit).ToArray());
-
-            if (string.IsNullOrEmpty(orderNumber))
-            {
-                MessageBox.Show("Invalid order number format!", "Invalid Input",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtOrderNumber.Clear();
-                txtOrderNumber.Focus();
-                return;
-            }
-
-            // Pad with leading zeros if user typed shorter number
             if (orderNumber.Length < 6)
             {
                 orderNumber = orderNumber.PadLeft(6, '0');
             }
-
-            // Update textbox to show formatted number
             txtOrderNumber.Text = orderNumber;
 
-            // Load the order
-            LoadOrderFromDatabase(orderNumber);
+            // Load using repository
+            LoadOrderUsingRepository(orderNumber);
+        }
+
+        private void LoadOrderUsingRepository(string orderNumber)
+        {
+            try
+            {
+                var items = OrderRepository.LoadOrder(orderNumber);
+
+                if (items == null)
+                {
+                    MessageBox.Show(
+                        $"Order #{orderNumber} not found or already processed!",
+                        "Invalid Order",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    txtOrderNumber.Clear();
+                    txtOrderNumber.Focus();
+                    return;
+                }
+
+                // Populate ListView
+                lvSelectedGames.Items.Clear();
+                decimal total = 0;
+
+                foreach (var item in items)
+                {
+                    string durationText = DurationFormatter.Format(item.Duration);
+                    decimal itemTotal = item.TotalPrice;
+
+                    ListViewItem lvItem = new ListViewItem(item.GameName);
+                    lvItem.SubItems.Add(durationText);
+                    lvItem.SubItems.Add(PriceFormatter.Format(itemTotal));
+
+                    lvSelectedGames.Items.Add(lvItem);
+                    total += itemTotal;
+                }
+
+                lblTotal.Text = PriceFormatter.Format(total);
+
+                MessageBox.Show(
+                    $"Order #{orderNumber} loaded!\n" +
+                    $"Items: {items.Count}\n" +
+                    $"Total: {PriceFormatter.Format(total)}",
+                    "Order Loaded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                txtOrderNumber.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void LoadOrderFromDatabase(string orderNumber)
         {
             try
             {
-                using (var conn = new MySqlConnection(Database.ConnectionString))
+                System.Diagnostics.Debug.WriteLine($"=== Loading order: {orderNumber} ===");
+
+                // Load using repository
+                var items = OrderRepository.LoadOrder(orderNumber);
+
+                if (items == null || items.Count == 0)
                 {
-                    conn.Open();
-
-                    // Check if order exists and is pending
-                    string checkQuery = @"
-                SELECT COUNT(*) 
-                FROM orders 
-                WHERE order_number = @orderNo AND status = 'Pending'";
-
-                    using (var cmd = new MySqlCommand(checkQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
-                        int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                        if (count == 0)
-                        {
-                            MessageBox.Show(
-                                $"Order #{orderNumber} not found or already processed!",
-                                "Invalid Order",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
-                            txtOrderNumber.Clear();
-                            txtOrderNumber.Focus();
-                            return;
-                        }
-                    }
-
-                    // Load order items
-                    string itemsQuery = @"
-                SELECT game_name, duration_minutes, price 
-                FROM order_items 
-                WHERE order_number = @orderNo";
-
-                    using (var cmd = new MySqlCommand(itemsQuery, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
-
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            // Clear existing items
-                            lvSelectedGames.Items.Clear();
-
-                            int itemCount = 0;
-                            while (reader.Read())
-                            {
-                                string gameName = reader.GetString("game_name");
-                                int duration = reader.GetInt32("duration_minutes");
-                                decimal price = reader.GetDecimal("price");
-
-                                // Add to ListView
-                                ListViewItem item = new ListViewItem(gameName);
-                                item.SubItems.Add(duration >= 60 ? $"{duration / 60} hr" : $"{duration} min");
-                                item.SubItems.Add("₱" + price.ToString("N2"));
-
-                                lvSelectedGames.Items.Add(item);
-                                itemCount++;
-                            }
-
-                            if (itemCount > 0)
-                            {
-                                // Calculate and update total
-                                UpdateTotalAmount();
-
-                                MessageBox.Show(
-                                    $"Order #{orderNumber} loaded successfully!\n" +
-                                    $"Items: {itemCount}\n" +
-                                    $"Total: {lblTotal.Text}",
-                                    "Order Loaded",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
-                            }
-                        }
-                    }
+                    MessageBox.Show(
+                        $"Order #{orderNumber} not found or already processed!",
+                        "Invalid Order",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    txtOrderNumber.Clear();
+                    txtOrderNumber.Focus();
+                    return;
                 }
+
+                // Clear ListView
+                lvSelectedGames.Items.Clear();
+                decimal orderTotal = 0;
+
+                // Populate ListView
+                foreach (var item in items)
+                {
+                    string durationText = DurationFormatter.Format(item.Duration);
+                    decimal itemTotal = item.TotalPrice;
+
+                    ListViewItem lvItem = new ListViewItem(item.GameName);
+                    lvItem.SubItems.Add(durationText);
+                    lvItem.SubItems.Add(PriceFormatter.Format(itemTotal));
+
+                    lvSelectedGames.Items.Add(lvItem);
+                    orderTotal += itemTotal;
+
+                    System.Diagnostics.Debug.WriteLine($"Added: {item.GameName} - {durationText} - {PriceFormatter.Format(itemTotal)}");
+                }
+
+                // Update total
+                lblTotal.Text = PriceFormatter.Format(orderTotal);
+
+                System.Diagnostics.Debug.WriteLine($"=== Order loaded successfully: {items.Count} items, Total: {PriceFormatter.Format(orderTotal)} ===");
+
+                MessageBox.Show(
+                    $"Order #{orderNumber} loaded successfully!\n\n" +
+                    $"Items: {items.Count}\n" +
+                    $"Total: {PriceFormatter.Format(orderTotal)}",
+                    "Order Loaded",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+
+                txtOrderNumber.Clear();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading order: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    $"Error loading order:\n{ex.Message}\n\nPlease check database connection.",
+                    "Database Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+
+                System.Diagnostics.Debug.WriteLine($"❌ LoadOrder Exception: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
             }
         }
 
@@ -334,119 +382,61 @@ namespace KGHCashierPOS
 
             foreach (ListViewItem item in lvSelectedGames.Items)
             {
-                string priceText = item.SubItems[2].Text.Replace("₱", "").Replace(",", "").Trim();
-                if (decimal.TryParse(priceText, out decimal price))
-                {
-                    total += price;
-                }
+                total += PriceFormatter.Parse(item.SubItems[2].Text);
             }
 
-            lblTotal.Text = "₱" + total.ToString("N2");
+            lblTotal.Text = PriceFormatter.Format(total);
         }
 
-        // PROCEED TO PAYMENT
+        // ============ PROCEED TO PAYMENT ============
+        private void btnProceedPayment_Click(object sender, EventArgs e)
+        {
+            if (lvSelectedGames.Items.Count == 0)
+            {
+                MessageBox.Show("Please add games to order!", "No Items",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-       private void btnProceedPayment_Click(object sender, EventArgs e)
-{
-    // Validate that there are items
-    if (lvSelectedGames.Items.Count == 0)
-    {
-        MessageBox.Show("Please add games to the order first!", "No Items",
-            MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        return;
-    }
+            // Create sessions
+            Dictionary<string, GameSession> sessions = new Dictionary<string, GameSession>();
+            decimal total = 0;
+            int counter = 1;
 
-    // Create GameSession dictionary from ListView
-    Dictionary<string, GameSession> sessions = new Dictionary<string, GameSession>();
-    decimal total = 0;
-    int sessionCounter = 1;
-
-            foreach(ListViewItem item in lvSelectedGames.Items)
-{
-                // Parse the ListView data
+            foreach (ListViewItem item in lvSelectedGames.Items)
+            {
                 string gameName = item.Text;
-                string durationText = item.SubItems[1].Text;
-                string priceText = item.SubItems[2].Text;
+                int totalMinutes = DurationFormatter.Parse(item.SubItems[1].Text);
+                decimal price = PriceFormatter.Parse(item.SubItems[2].Text);
 
-                // Parse duration - FIXED VERSION
-                int totalMinutes = 0;
-
-                if (durationText.Contains("hr"))
+                GameSession session = new GameSession
                 {
-                    // Declare hourIndex here
-                    int hrIndex = durationText.IndexOf("hr");
-                    string hourPart = durationText.Substring(0, hrIndex).Trim();
+                    GameName = gameName,
+                    StartTime = DateTime.Now,
+                    EndTime = DateTime.Now.AddMinutes(totalMinutes),
+                    TotalMinutes = totalMinutes,
+                    TotalPrice = price
+                };
 
-                    if (int.TryParse(hourPart, out int hours))
-                    {
-                        totalMinutes += hours * 60;
-                    }
+                sessions.Add($"session_{counter}", session);
+                total += price;
+                counter++;
+            }
 
-                    // Check for minutes in the SAME if block
-                    if (durationText.Contains("min"))
-                    {
-                        string afterHr = durationText.Substring(hrIndex + 2);
-                        string minPart = afterHr.Replace("min", "").Trim();
-
-                        if (int.TryParse(minPart, out int minutes))
-                        {
-                            totalMinutes += minutes;
-                        }
-                    }
-                }
-                else if (durationText.Contains("min"))
-                {
-                    // Only minutes, no hours
-                    string minPart = durationText.Replace("min", "").Trim();
-                    if (int.TryParse(minPart, out int minutes))
-                    {
-                        totalMinutes = minutes;
-                    }
-                }
-
-                // Parse price
-                decimal price = 0;
-        if (priceText.StartsWith("₱"))
-        {
-            string cleanPrice = priceText.Replace("₱", "").Replace(",", "").Trim();
-            decimal.TryParse(cleanPrice, out price);
+            // Show payment
+            paymentControl.Visible = true;
+            paymentControl.BringToFront();
+            paymentControl.LoadPaymentData(sessions, total);
         }
 
-        // Create GameSession
-        GameSession session = new GameSession
+        // ============ CLEAR & RESET ============
+        private void btnClearCashierForm_Click_1(object sender, EventArgs e)
         {
-            GameName = gameName,
-            //
-            StartTime = DateTime.Now, // You might want to store actual start time
-            EndTime = DateTime.Now.AddMinutes(totalMinutes),
-            TotalMinutes = totalMinutes,
-            TotalPrice = price,
-            //
-        };
-
-        sessions.Add($"session_{sessionCounter}", session);
-        total += price;
-        sessionCounter++;
-        }
-
-
-
-        // Validate sessions were created
-        if (sessions.Count == 0)
-        {
-            MessageBox.Show("Error creating payment sessions!", "Error",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
-
-        // Show payment control
-        paymentControl1.Visible = true;
-        paymentControl1.BringToFront();
-
-        // Load payment data
-        paymentControl1.LoadPaymentData(sessions, total);
-
-    
+            if (MessageBox.Show("Clear all items?", "Confirm Clear",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                ResetTransaction();
+            }
         }
 
         public void ResetTransaction()
@@ -454,39 +444,21 @@ namespace KGHCashierPOS
             txtOrderNumber.Clear();
             lvSelectedGames.Items.Clear();
             lblTotal.Text = "₱0.00";
-            activeSessions.Clear();
-            totalAmount = 0;
-            selectedGame = "";
+            sessionManager.ClearAll();
+            ResetGameButtonColors();
             txtOrderNumber.Focus();
         }
 
-        private void btnClearCashierForm_Click_1(object sender, EventArgs e)
-        {
-            ResetTransaction();
-        }
         private void OnPaymentSuccessful()
         {
             ResetTransaction();
-        }
-
-        /* OrderForm orderForm = new OrderForm();
-            orderForm.ShowDialog(); 
-        
-         paymentControl1 : UserControl*/
-
-        public void ClosePayment()
-        {
             paymentControl.Visible = false;
-            
+
+            MessageBox.Show("Payment completed!\nForm reset for next customer.",
+                "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void CashierForm_Load(object sender, EventArgs e)
-        {
-            UpdateDateTime();        
-            timerDateTime.Start();   
-        }
-
-
+        // ============ DATE/TIME ============
         private void timerDateTime_Tick(object sender, EventArgs e)
         {
             UpdateDateTime();
@@ -494,8 +466,25 @@ namespace KGHCashierPOS
 
         private void UpdateDateTime()
         {
-            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy"); 
-            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");   
+            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy");
+            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");
+        }
+
+        // Add this test method
+        private void TestDatabaseConnection()
+        {
+            try
+            {
+                using (var conn = new MySql.Data.MySqlClient.MySqlConnection(Database.ConnectionString))
+                {
+                    conn.Open();
+                    MessageBox.Show("Database connected successfully!", "Success");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Database error: {ex.Message}", "Error");
+            }
         }
     }
 }

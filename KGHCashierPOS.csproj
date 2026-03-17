@@ -171,13 +171,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ButtonStyleHelper.cs" />
     <Compile Include="CashierForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CashierForm.Designer.cs">
       <DependentUpon>CashierForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="CashierFormModels.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="DiscountManager.cs" />
+    <Compile Include="DurationFormatter.cs" />
+    <Compile Include="EquipmentManager.cs" />
     <Compile Include="EquipmentSelectionDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -201,6 +206,14 @@
       <DependentUpon>OrderForm.cs</DependentUpon>
     </Compile>
     <Compile Include="OrderFormModels.cs" />
+    <Compile Include="OrderNumberGenerator.cs" />
+    <Compile Include="OrderRepository.cs" />
+    <Compile Include="PaymentCalculator.cs" />
+    <Compile Include="PaymentRepository.cs" />
+    <Compile Include="PaymentValidator.cs" />
+    <Compile Include="PDFGenerator.cs" />
+    <Compile Include="PriceFormatter.cs" />
+    <Compile Include="PriceManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PaymentControl.cs">
@@ -209,6 +222,8 @@
     <Compile Include="PaymentControl.Designer.cs">
       <DependentUpon>PaymentControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReceiptGenerator.cs" />
+    <Compile Include="ValidationHelper.cs" />
     <EmbeddedResource Include="CashierForm.resx">
       <DependentUpon>CashierForm.cs</DependentUpon>
     </EmbeddedResource>
