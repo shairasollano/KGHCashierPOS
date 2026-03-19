@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -8,12 +9,14 @@ namespace KGHCashierPOS
     {
         // ============ SINGLE MANAGER INSTANCE ============
         private OrderManager orderManager;
+        private EquipmentRentalControl equipmentRentalControl;
 
         // ============ CONSTRUCTOR ============
         public OrderForm()
         {
             InitializeComponent();
             orderManager = new OrderManager();
+            InitializeEquipmentControl();
             InitializeForm();
         }
 
@@ -24,6 +27,20 @@ namespace KGHCashierPOS
             UpdateTotalDisplay();
             InitializeButtonStyles();
         }
+
+        private void InitializeEquipmentControl()
+        {
+            equipmentRentalControl = new EquipmentRentalControl();
+            equipmentRentalControl.Visible = false;
+            equipmentRentalControl.Location = new Point(
+                (this.ClientSize.Width - equipmentRentalControl.Width) / 2,
+                (this.ClientSize.Height - equipmentRentalControl.Height) / 2
+            );
+            equipmentRentalControl.BringToFront();
+
+            this.Controls.Add(equipmentRentalControl);
+        }
+
 
         private void InitializeButtonStyles()
         {
@@ -196,19 +213,38 @@ namespace KGHCashierPOS
         {
             if (!orderManager.HasEquipment(orderManager.SelectedGame))
             {
-                AddGameToOrder(new System.Collections.Generic.List<Equipment>(), 0);
+                AddGameToOrder(new List<Equipment>(), 0);
                 return;
             }
 
             var equipment = orderManager.GetEquipmentForGame(orderManager.SelectedGame);
 
-            using (var dialog = new EquipmentSelectionDialog(orderManager.SelectedGame, equipment))
+            // ⭐ Use UserControl instead of Dialog
+            equipmentRentalControl.LoadEquipment(orderManager.SelectedGame, equipment);
+            equipmentRentalControl.Visible = true;
+            equipmentRentalControl.BringToFront();
+
+            // ⭐ Wait for user action (using Timer to check)
+            Timer checkTimer = new Timer();
+            checkTimer.Interval = 100;
+            checkTimer.Tick += (s, e) =>
             {
-                if (dialog.ShowDialog() == DialogResult.OK)
+                if (!equipmentRentalControl.Visible)
                 {
-                    AddGameToOrder(dialog.SelectedEquipment, dialog.TotalEquipmentCost);
+                    checkTimer.Stop();
+
+                    if (equipmentRentalControl.IsConfirmed)
+                    {
+                        AddGameToOrder(
+                            equipmentRentalControl.SelectedEquipment,
+                            equipmentRentalControl.TotalEquipmentCost
+                        );
+                    }
+
+                    checkTimer.Dispose();
                 }
-            }
+            };
+            checkTimer.Start();
         }
 
         private void AddGameToOrder(System.Collections.Generic.List<Equipment> equipment, decimal equipmentCost)

@@ -182,7 +182,19 @@
     <Compile Include="Database.cs" />
     <Compile Include="DiscountManager.cs" />
     <Compile Include="DurationFormatter.cs" />
+    <Compile Include="EquipmentItemControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EquipmentItemControl.Designer.cs">
+      <DependentUpon>EquipmentItemControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EquipmentManager.cs" />
+    <Compile Include="EquipmentRentalControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EquipmentRentalControl.Designer.cs">
+      <DependentUpon>EquipmentRentalControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="EquipmentSelectionDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -226,6 +238,12 @@
     <Compile Include="ValidationHelper.cs" />
     <EmbeddedResource Include="CashierForm.resx">
       <DependentUpon>CashierForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EquipmentItemControl.resx">
+      <DependentUpon>EquipmentItemControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EquipmentRentalControl.resx">
+      <DependentUpon>EquipmentRentalControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="extratodelete.resx">
       <DependentUpon>extratodelete.cs</DependentUpon>

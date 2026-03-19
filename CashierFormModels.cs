@@ -23,6 +23,8 @@ namespace KGHCashierPOS
         public CashierSessionManager()
         {
             ActiveSessions = new Dictionary<string, GameSession>();
+            SelectedGame = "";
+            TotalAmount = 0;
             InitializePricing();
             InitializeEquipment();
         }
@@ -118,44 +120,56 @@ namespace KGHCashierPOS
         // ============ SESSION MANAGEMENT ============
         public void AddOrExtendSession(string gameName, int minutes, List<Equipment> equipment, decimal equipmentCost)
         {
-            decimal gamePrice = minutes == 30
-                ? PriceList[gameName].min30
-                : PriceList[gameName].hour1;
-
             if (ActiveSessions.ContainsKey(gameName))
             {
                 // Extend existing session
                 ActiveSessions[gameName].TotalMinutes += minutes;
-                ActiveSessions[gameName].TotalPrice += gamePrice;
+                ActiveSessions[gameName].TotalPrice += PriceManager.GetPrice(gameName, minutes);
 
-                // Add equipment cost
-                if (equipmentCost > 0)
+                // ⭐ Add equipment to existing session
+                if (equipment != null && equipment.Count > 0)
                 {
-                    ActiveSessions[gameName].EquipmentCost += equipmentCost;
-
-                    // Merge equipment lists
-                    if (ActiveSessions[gameName].Equipment == null)
+                    foreach (var eq in equipment)
                     {
-                        ActiveSessions[gameName].Equipment = new List<Equipment>();
+                        var existing = ActiveSessions[gameName].Equipment.Find(e => e.Name == eq.Name);
+                        if (existing != null)
+                        {
+                            existing.RentalQuantity += eq.RentalQuantity;
+                        }
+                        else
+                        {
+                            ActiveSessions[gameName].Equipment.Add(new Equipment
+                            {
+                                Name = eq.Name,
+                                Price = eq.Price,
+                                Type = eq.Type,
+                                DefaultQuantity = eq.DefaultQuantity,
+                                RentalQuantity = eq.RentalQuantity
+                            });
+                        }
                     }
-                    ActiveSessions[gameName].Equipment.AddRange(equipment);
+                    ActiveSessions[gameName].EquipmentCost += equipmentCost;
                 }
             }
             else
             {
                 // Create new session
-                ActiveSessions[gameName] = new GameSession
+                decimal gamePrice = PriceManager.GetPrice(gameName, minutes);
+
+                ActiveSessions.Add(gameName, new GameSession
                 {
                     GameName = gameName,
                     TotalMinutes = minutes,
                     TotalPrice = gamePrice,
-                    Equipment = equipment,
-                    EquipmentCost = equipmentCost,
-                    StartTime = DateTime.Now
-                };
+                    StartTime = DateTime.Now.AddMinutes(3),
+                    EndTime = DateTime.Now.AddMinutes(3 + minutes),
+                    IsActive = false,
+                    Equipment = equipment ?? new List<Equipment>(),  // ⭐ Add equipment
+                    EquipmentCost = equipmentCost  // ⭐ Add equipment cost
+                });
             }
 
-            CalculateTotal();
+            UpdateTotalAmount();
         }
 
         public void RemoveSession(string gameName)
@@ -169,6 +183,19 @@ namespace KGHCashierPOS
             ActiveSessions.Clear();
             SelectedGame = "";
             TotalAmount = 0;
+        }
+
+        public void UpdateTotalAmount()
+        {
+            TotalAmount = 0;
+
+            foreach (var session in ActiveSessions.Values)
+            {
+                // ⭐ Add both game price AND equipment cost
+                TotalAmount += session.TotalPrice + session.EquipmentCost;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Total Amount Updated: {TotalAmount:C}");
         }
 
         // ============ CALCULATIONS ============

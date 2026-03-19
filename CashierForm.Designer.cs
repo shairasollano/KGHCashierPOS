@@ -67,15 +67,10 @@
             this.btn0 = new System.Windows.Forms.Button();
             this.btnEnter = new System.Windows.Forms.Button();
             this.totalValue = new System.Windows.Forms.Label();
-            this.lvSelectedGames = new System.Windows.Forms.ListView();
-            this.Game = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Duration = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.Rate = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.StartTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.EndTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnClearCashierForm = new System.Windows.Forms.Button();
             this.timerDateTime = new System.Windows.Forms.Timer(this.components);
             this.paymentPanel = new KGHCashierPOS.paymentControl1();
+            this.rtbSelectedGames = new System.Windows.Forms.RichTextBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -542,50 +537,6 @@
             this.totalValue.TabIndex = 33;
             this.totalValue.Text = "TOTAL: ";
             // 
-            // lvSelectedGames
-            // 
-            this.lvSelectedGames.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.Game,
-            this.Duration,
-            this.Rate,
-            this.StartTime,
-            this.EndTime});
-            this.lvSelectedGames.FullRowSelect = true;
-            this.lvSelectedGames.GridLines = true;
-            this.lvSelectedGames.HideSelection = false;
-            this.lvSelectedGames.Location = new System.Drawing.Point(717, 99);
-            this.lvSelectedGames.MultiSelect = false;
-            this.lvSelectedGames.Name = "lvSelectedGames";
-            this.lvSelectedGames.Size = new System.Drawing.Size(491, 515);
-            this.lvSelectedGames.TabIndex = 34;
-            this.lvSelectedGames.UseCompatibleStateImageBehavior = false;
-            this.lvSelectedGames.View = System.Windows.Forms.View.Details;
-            // 
-            // Game
-            // 
-            this.Game.Text = "Game";
-            this.Game.Width = 120;
-            // 
-            // Duration
-            // 
-            this.Duration.Text = "Duration";
-            this.Duration.Width = 100;
-            // 
-            // Rate
-            // 
-            this.Rate.Text = "Rate";
-            this.Rate.Width = 80;
-            // 
-            // StartTime
-            // 
-            this.StartTime.Text = "Start Time";
-            this.StartTime.Width = 100;
-            // 
-            // EndTime
-            // 
-            this.EndTime.Text = "End Time";
-            this.EndTime.Width = 100;
-            // 
             // btnClearCashierForm
             // 
             this.btnClearCashierForm.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(190)))), ((int)(((byte)(95)))));
@@ -614,13 +565,24 @@
             this.paymentPanel.TabIndex = 35;
             this.paymentPanel.Visible = false;
             // 
+            // rtbSelectedGames
+            // 
+            this.rtbSelectedGames.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.rtbSelectedGames.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rtbSelectedGames.Location = new System.Drawing.Point(729, 112);
+            this.rtbSelectedGames.Name = "rtbSelectedGames";
+            this.rtbSelectedGames.ReadOnly = true;
+            this.rtbSelectedGames.Size = new System.Drawing.Size(489, 481);
+            this.rtbSelectedGames.TabIndex = 36;
+            this.rtbSelectedGames.Text = "";
+            // 
             // CashierForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.AutoSize = true;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1252, 717);
-            this.Controls.Add(this.lvSelectedGames);
+            this.Controls.Add(this.rtbSelectedGames);
             this.Controls.Add(this.totalValue);
             this.Controls.Add(this.btnEnter);
             this.Controls.Add(this.btn0);
@@ -696,18 +658,13 @@
         private System.Windows.Forms.Button btn0;
         private System.Windows.Forms.Button btnEnter;
         private System.Windows.Forms.Label totalValue;
-        private System.Windows.Forms.ListView lvSelectedGames;
-        private System.Windows.Forms.ColumnHeader Game;
-        private System.Windows.Forms.ColumnHeader Duration;
-        private System.Windows.Forms.ColumnHeader Rate;
-        private System.Windows.Forms.ColumnHeader StartTime;
-        private System.Windows.Forms.ColumnHeader EndTime;
         private System.Windows.Forms.Label lblUser;
         private System.Windows.Forms.Button btnClearCashierForm;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Timer timerDateTime;
         private paymentControl1 paymentPanel;
+        private System.Windows.Forms.RichTextBox rtbSelectedGames;
     }
 }
 

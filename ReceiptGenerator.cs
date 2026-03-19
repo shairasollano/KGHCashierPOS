@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 
@@ -9,6 +8,12 @@ namespace KGHCashierPOS
 {
     public static class ReceiptGenerator
     {
+        // Tax rate (12% VAT in Philippines)
+        private const decimal TAX_RATE = 0.12m;
+
+        // Fixed width for thermal receipt (80mm = 226.77 points)
+        private const float RECEIPT_WIDTH = 226.77f;
+
         public static string GenerateReceipt(ReceiptData receipt)
         {
             string receiptNo = "MPGH-" + DateTime.Now.ToString("yyyyMMddHHmmss");
@@ -20,200 +25,357 @@ namespace KGHCashierPOS
             Directory.CreateDirectory(folderPath);
             string filePath = Path.Combine(folderPath, receiptNo + ".pdf");
 
-            Document document = new Document(new Rectangle(226.77f, 566.93f));
-            PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
-            document.SetMargins(10f, 10f, 10f, 10f);
-            document.Open();
+            // ⭐ STEP 1: Calculate required height based on content
+            float requiredHeight = CalculateReceiptHeight(receipt);
 
-            Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
-            Font subHeaderFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12);
-            Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9);
-            Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9);
-            Font smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
-            Font totalFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
+            // ⭐ STEP 2: Create document with calculated height (not fixed!)
+            Document document = new Document(
+                new Rectangle(RECEIPT_WIDTH, requiredHeight),
+                10f, 10f, 10f, 10f  // margins: left, right, top, bottom
+            );
 
-            // Header
-            AddHeader(document, receiptNo, headerFont, subHeaderFont, boldFont, normalFont, smallFont);
-
-            // Items
-            AddItems(document, receipt.Sessions, normalFont, boldFont, smallFont);
-
-            // Totals
-            AddTotals(document, receipt, normalFont, boldFont, totalFont);
-
-            // Payment Info
-            AddPaymentInfo(document, receipt, normalFont, boldFont, smallFont);
-
-            // Footer
-            AddFooter(document, boldFont, normalFont, smallFont);
-
-            document.Close();
-
-            return filePath;
-        }
-
-        private static void AddHeader(Document doc, string receiptNo, Font header, Font subHeader, Font bold, Font normal, Font small)
-        {
-            Paragraph title = new Paragraph("MATCH POINT", header);
-            title.Alignment = Element.ALIGN_CENTER;
-            doc.Add(title);
-
-            Paragraph subtitle = new Paragraph("GAMING HUB", subHeader);
-            subtitle.Alignment = Element.ALIGN_CENTER;
-            doc.Add(subtitle);
-
-            Paragraph address = new Paragraph("123 Gaming Street, City\nTel: (02) 1234-5678", small);
-            address.Alignment = Element.ALIGN_CENTER;
-            doc.Add(address);
-
-            doc.Add(new Paragraph(" "));
-
-            Paragraph receipt = new Paragraph("OFFICIAL RECEIPT", bold);
-            receipt.Alignment = Element.ALIGN_CENTER;
-            doc.Add(receipt);
-
-            doc.Add(new Paragraph("═══════════════════════════", normal));
-
-            doc.Add(new Paragraph($"Receipt No: {receiptNo}", normal));
-            doc.Add(new Paragraph($"Date: {DateTime.Now:MM/dd/yyyy hh:mm tt}", normal));
-            doc.Add(new Paragraph($"Cashier: {Environment.UserName}", normal));
-
-            doc.Add(new Paragraph("═══════════════════════════", normal));
-            doc.Add(new Paragraph(" "));
-        }
-
-        private static void AddItems(Document doc, Dictionary<string, GameSession> sessions, Font normal, Font bold, Font small)
-        {
-            Paragraph header = new Paragraph("TRANSACTION DETAILS", bold);
-            doc.Add(header);
-            doc.Add(new Paragraph("───────────────────────────", small));
-
-            PdfPTable table = new PdfPTable(3);
-            table.WidthPercentage = 100;
-            table.SetWidths(new float[] { 2f, 1.5f, 1.5f });
-            table.DefaultCell.Border = Rectangle.NO_BORDER;
-            table.DefaultCell.PaddingBottom = 3f;
-
-            // Headers
-            PdfPCell h1 = new PdfPCell(new Phrase("Game", bold));
-            h1.Border = Rectangle.NO_BORDER;
-            table.AddCell(h1);
-
-            PdfPCell h2 = new PdfPCell(new Phrase("Duration", bold));
-            h2.Border = Rectangle.NO_BORDER;
-            h2.HorizontalAlignment = Element.ALIGN_CENTER;
-            table.AddCell(h2);
-
-            PdfPCell h3 = new PdfPCell(new Phrase("Amount", bold));
-            h3.Border = Rectangle.NO_BORDER;
-            h3.HorizontalAlignment = Element.ALIGN_RIGHT;
-            table.AddCell(h3);
-
-            // Items
-            foreach (var session in sessions.Values)
+            try
             {
-                string duration = DurationFormatter.Format(session.TotalMinutes);
+                PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+                document.Open();
 
-                PdfPCell c1 = new PdfPCell(new Phrase(session.GameName, normal));
-                c1.Border = Rectangle.NO_BORDER;
-                table.AddCell(c1);
+                // Fonts
+                Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
+                Font subHeaderFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
+                Font normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 8);
+                Font boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8);
+                Font smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 7);
+                Font tinyFont = FontFactory.GetFont(FontFactory.HELVETICA, 6);
 
-                PdfPCell c2 = new PdfPCell(new Phrase(duration, normal));
-                c2.Border = Rectangle.NO_BORDER;
-                c2.HorizontalAlignment = Element.ALIGN_CENTER;
-                table.AddCell(c2);
+                // ============ HEADER ============
+                AddCenteredText(document, "MATCH POINT", headerFont);
+                AddCenteredText(document, "GAMING HUB", subHeaderFont);
+                AddCenteredText(document, "143 St. Caloocan City, Metro Manila", smallFont);
+                AddCenteredText(document, "Tel: (03) 8143-6577", smallFont);
 
-                PdfPCell c3 = new PdfPCell(new Phrase(PriceFormatter.Format(session.TotalPrice), normal));
-                c3.Border = Rectangle.NO_BORDER;
-                c3.HorizontalAlignment = Element.ALIGN_RIGHT;
-                table.AddCell(c3);
+                document.Add(new Paragraph(" ", tinyFont));
+                AddDashedLine(document, normalFont);
+               
+
+                // ============ RECEIPT INFO ============
+                AddLeftAlignedText(document, $"Receipt No: {receiptNo}", normalFont);
+                AddLeftAlignedText(document, $"Date: {DateTime.Now:MMM dd, yyyy hh:mm tt}", normalFont);
+                AddLeftAlignedText(document, $"Cashier: ", normalFont); // {UserSession.Username ?? Environment.UserName}
+
+                AddDashedLine(document, normalFont);
+
+                // ============ ITEMS ============
+                AddLeftAlignedText(document, "ITEMS:", boldFont);
+                document.Add(new Paragraph(" ", tinyFont));
+
+                foreach (var session in receipt.Sessions.Values)
+                {
+                    string duration = DurationFormatter.Format(session.TotalMinutes);
+
+                    // Item name
+                    AddLeftAlignedText(document, session.GameName, normalFont);
+
+                    // Duration and game price
+                    PdfPTable itemTable = new PdfPTable(2);
+                    itemTable.WidthPercentage = 100;
+                    itemTable.SetWidths(new float[] { 70f, 30f });
+                    itemTable.DefaultCell.Border = Rectangle.NO_BORDER;
+                    itemTable.DefaultCell.PaddingBottom = 0f;
+                    itemTable.DefaultCell.PaddingTop = 0f;
+
+                    PdfPCell durationCell = new PdfPCell(new Phrase($"  {duration}", smallFont));
+                    durationCell.Border = Rectangle.NO_BORDER;
+                    durationCell.PaddingLeft = 5f;
+                    itemTable.AddCell(durationCell);
+
+                    PdfPCell priceCell = new PdfPCell(new Phrase($"{session.TotalPrice:N2}", normalFont));
+                    priceCell.Border = Rectangle.NO_BORDER;
+                    priceCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                    itemTable.AddCell(priceCell);
+
+                    document.Add(itemTable);
+
+                    // ⭐ ADD EQUIPMENT DETAILS TO RECEIPT
+                    if (session.Equipment != null && session.Equipment.Count > 0)
+                    {
+                        foreach (var eq in session.Equipment)
+                        {
+                            if (eq.RentalQuantity > 0)
+                            {
+                                PdfPTable equipTable = new PdfPTable(2);
+                                equipTable.WidthPercentage = 100;
+                                equipTable.SetWidths(new float[] { 70f, 30f });
+                                equipTable.DefaultCell.Border = Rectangle.NO_BORDER;
+
+                                PdfPCell equipNameCell = new PdfPCell(new Phrase($"    + {eq.Name} x{eq.RentalQuantity}", smallFont));
+                                equipNameCell.Border = Rectangle.NO_BORDER;
+                                equipNameCell.PaddingLeft = 10f;
+                                equipTable.AddCell(equipNameCell);
+
+                                PdfPCell equipPriceCell = new PdfPCell(new Phrase($"{eq.TotalCost:N2}", smallFont));
+                                equipPriceCell.Border = Rectangle.NO_BORDER;
+                                equipPriceCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                                equipTable.AddCell(equipPriceCell);
+
+                                document.Add(equipTable);
+                            }
+                        }
+
+                        // Equipment subtotal if there's equipment cost
+                        if (session.EquipmentCost > 0)
+                        {
+                            PdfPTable equipTotalTable = new PdfPTable(2);
+                            equipTotalTable.WidthPercentage = 100;
+                            equipTotalTable.SetWidths(new float[] { 70f, 30f });
+                            equipTotalTable.DefaultCell.Border = Rectangle.NO_BORDER;
+
+                            PdfPCell equipLabelCell = new PdfPCell(new Phrase("  Equipment:", smallFont));
+                            equipLabelCell.Border = Rectangle.NO_BORDER;
+                            equipLabelCell.PaddingLeft = 5f;
+                            equipTotalTable.AddCell(equipLabelCell);
+
+                            PdfPCell equipAmountCell = new PdfPCell(new Phrase($"{session.EquipmentCost:N2}", smallFont));
+                            equipAmountCell.Border = Rectangle.NO_BORDER;
+                            equipAmountCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                            equipTotalTable.AddCell(equipAmountCell);
+
+                            document.Add(equipTotalTable);
+                        }
+                    }
+                }
+
+                document.Add(new Paragraph(" ", tinyFont));
+                AddDashedLine(document, normalFont);
+
+                // ============ CALCULATIONS ============
+                decimal subtotalBeforeTax = receipt.Subtotal / (1 + TAX_RATE);
+                decimal vatAmount = receipt.Subtotal - subtotalBeforeTax;
+                decimal discountedSubtotal = receipt.Subtotal - receipt.DiscountAmount;
+                decimal discountedBeforeTax = discountedSubtotal / (1 + TAX_RATE);
+                decimal finalVat = discountedSubtotal - discountedBeforeTax;
+
+                // Subtotal
+                AddPriceLine(document, "Subtotal:", receipt.Subtotal, normalFont, false);
+
+                // Discount
+                if (receipt.DiscountAmount > 0)
+                {
+                    AddPriceLine(document, $"Discount ({receipt.DiscountType}):", -receipt.DiscountAmount, normalFont, false);
+                    AddPriceLine(document, "Subtotal after discount:", discountedSubtotal, normalFont, false);
+                }
+
+                document.Add(new Paragraph(" ", tinyFont));
+
+                // Tax breakdown
+                AddLeftAlignedText(document, "VAT Breakdown:", boldFont);
+                AddPriceLine(document, "  VATable Sale:", discountedBeforeTax, smallFont, false);
+                AddPriceLine(document, "  VAT (12%):", finalVat, smallFont, false);
+
+                document.Add(new Paragraph(" ", tinyFont));
+                AddSolidLine(document, normalFont);
+
+                // ============ TOTAL ============
+                PdfPTable totalTable = new PdfPTable(2);
+                totalTable.WidthPercentage = 100;
+                totalTable.SetWidths(new float[] { 60f, 40f });
+                totalTable.DefaultCell.Border = Rectangle.NO_BORDER;
+                totalTable.DefaultCell.PaddingTop = 2f;
+                totalTable.DefaultCell.PaddingBottom = 2f;
+
+                PdfPCell totalLabelCell = new PdfPCell(new Phrase("TOTAL AMOUNT DUE:", boldFont));
+                totalLabelCell.Border = Rectangle.NO_BORDER;
+                totalTable.AddCell(totalLabelCell);
+
+                PdfPCell totalAmountCell = new PdfPCell(new Phrase($"₱ {receipt.FinalAmount:N2}", boldFont));
+                totalAmountCell.Border = Rectangle.NO_BORDER;
+                totalAmountCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                totalTable.AddCell(totalAmountCell);
+
+                document.Add(totalTable);
+                AddSolidLine(document, normalFont);
+
+                // ============ PAYMENT DETAILS ============
+                AddLeftAlignedText(document, "PAYMENT DETAILS:", boldFont);
+                AddLeftAlignedText(document, $"Payment Method: {receipt.PaymentMethod}", normalFont);
+
+                if (receipt.PaymentMethod == "Cash")
+                {
+                    AddPriceLine(document, "Cash Tendered:", receipt.CashReceived, normalFont, false);
+                    AddPriceLine(document, "Change:", receipt.Change, normalFont, false);
+                }
+                else if (receipt.PaymentMethod == "GCash")
+                {
+                    AddLeftAlignedText(document, $"GCash Ref: {receipt.GCashReference}", normalFont);
+                }
+
+                AddDashedLine(document, normalFont);
+
+                // ============ TRANSACTION TIMES ============
+                if (receipt.Sessions.Count > 0)
+                {
+                    AddLeftAlignedText(document, "SESSION TIMES:", boldFont);
+
+                    foreach (var session in receipt.Sessions.Values)
+                    {
+                        AddLeftAlignedText(document, $"{session.GameName}:", normalFont);
+                        AddLeftAlignedText(document, $"  Start: {session.StartTime:hh:mm tt}", smallFont);
+                        AddLeftAlignedText(document, $"  End:   {session.EndTime:hh:mm tt}", smallFont);
+                    }
+
+                    AddDashedLine(document, normalFont);
+                }
+
+                // ============ FOOTER ============
+                document.Add(new Paragraph(" ", tinyFont));
+                AddCenteredText(document, "Thank you for choosing", normalFont);
+                AddCenteredText(document, "MATCH POINT GAMING HUB!", boldFont);
+                AddCenteredText(document, "Please come again!", normalFont);
+
+                document.Add(new Paragraph(" ", tinyFont));
+                AddCenteredText(document, "This serves as your official receipt.", tinyFont);
+
+                document.Add(new Paragraph(" ", tinyFont));
+                AddDashedLine(document, normalFont);
+
+                AddCenteredText(document, "For concerns and feedback:", tinyFont);
+                AddCenteredText(document, "matchpoint@email.com", tinyFont);
+                AddCenteredText(document, "www.matchpointgaming.com", tinyFont);
+
+                document.Add(new Paragraph(" ", tinyFont));
+                AddCenteredText(document, $"Printed: {DateTime.Now:MMM dd, yyyy hh:mm tt}", tinyFont);
+
+                document.Close();
+
+                System.Diagnostics.Debug.WriteLine($"✓ Receipt generated: {filePath} (Height: {requiredHeight}pt)");
+                return filePath;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Receipt generation error: {ex.Message}");
+                throw;
+            }
+        }
+
+        // ⭐ NEW METHOD: Calculate required height based on content
+        private static float CalculateReceiptHeight(ReceiptData receipt)
+        {
+            float height = 0f;
+
+            // Header section (company name, address, TIN) - approximately 80pt
+            height += 80f;
+
+            // Receipt info (receipt no, date, cashier) - approximately 50pt
+            height += 50f;
+
+            // Items section
+            // Each item takes approximately 20pt (name + duration/price line)
+            height += receipt.Sessions.Count * 20f;
+
+            // Spacing and separators around items - approximately 30pt
+            height += 30f;
+
+            // Calculations section (subtotal, discount, VAT breakdown) - approximately 80pt
+            height += 80f;
+
+            // If discount applied, add extra space
+            if (receipt.DiscountAmount > 0)
+            {
+                height += 20f;
             }
 
-            doc.Add(table);
-            doc.Add(new Paragraph(" "));
-            doc.Add(new Paragraph("───────────────────────────", small));
+            // Total section - approximately 30pt
+            height += 30f;
+
+            // Payment details - approximately 40pt
+            height += 40f;
+
+            // Session times section
+            // Each session takes approximately 30pt (game name + start + end)
+            height += receipt.Sessions.Count * 30f;
+
+            // Footer section - approximately 120pt
+            height += 120f;
+
+            // Add some buffer space (10% extra)
+            height *= 1.1f;
+
+            // Minimum height (for single item receipts)
+            if (height < 400f)
+            {
+                height = 400f;
+            }
+
+            // Maximum reasonable height (for very long receipts)
+            if (height > 2000f)
+            {
+                height = 2000f;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Calculated receipt height: {height}pt for {receipt.Sessions.Count} items");
+
+            return height;
         }
 
-        private static void AddTotals(Document doc, ReceiptData receipt, Font normal, Font bold, Font total)
+        // ============ HELPER METHODS ============
+        private static void AddCenteredText(Document doc, string text, Font font)
+        {
+            Paragraph p = new Paragraph(text, font);
+            p.Alignment = Element.ALIGN_CENTER;
+            p.SpacingAfter = 2f;
+            doc.Add(p);
+        }
+
+        private static void AddLeftAlignedText(Document doc, string text, Font font)
+        {
+            Paragraph p = new Paragraph(text, font);
+            p.Alignment = Element.ALIGN_LEFT;
+            p.SpacingAfter = 2f;
+            doc.Add(p);
+        }
+
+        private static void AddPriceLine(Document doc, string label, decimal amount, Font font, bool isBold)
         {
             PdfPTable table = new PdfPTable(2);
             table.WidthPercentage = 100;
-            table.SetWidths(new float[] { 3f, 2f });
+            table.SetWidths(new float[] { 60f, 40f });
             table.DefaultCell.Border = Rectangle.NO_BORDER;
+            table.DefaultCell.PaddingBottom = 1f;
+            table.DefaultCell.PaddingTop = 1f;
+            table.SpacingAfter = 2f;
 
-            table.AddCell(new Phrase("Subtotal:", normal));
-            PdfPCell subtotal = new PdfPCell(new Phrase(PriceFormatter.Format(receipt.Subtotal), normal));
-            subtotal.Border = Rectangle.NO_BORDER;
-            subtotal.HorizontalAlignment = Element.ALIGN_RIGHT;
-            table.AddCell(subtotal);
+            Font useFont = isBold ? FontFactory.GetFont(FontFactory.HELVETICA_BOLD, font.Size) : font;
 
-            if (receipt.DiscountAmount > 0)
-            {
-                table.AddCell(new Phrase($"Discount ({receipt.DiscountType}):", normal));
-                PdfPCell discount = new PdfPCell(new Phrase("-" + PriceFormatter.Format(receipt.DiscountAmount), normal));
-                discount.Border = Rectangle.NO_BORDER;
-                discount.HorizontalAlignment = Element.ALIGN_RIGHT;
-                table.AddCell(discount);
-            }
+            PdfPCell labelCell = new PdfPCell(new Phrase(label, useFont));
+            labelCell.Border = Rectangle.NO_BORDER;
+            labelCell.PaddingBottom = 1f;
+            table.AddCell(labelCell);
+
+            string priceText = amount >= 0 ? $"₱ {amount:N2}" : $"-₱ {Math.Abs(amount):N2}";
+            PdfPCell priceCell = new PdfPCell(new Phrase(priceText, useFont));
+            priceCell.Border = Rectangle.NO_BORDER;
+            priceCell.HorizontalAlignment = Element.ALIGN_RIGHT;
+            priceCell.PaddingBottom = 1f;
+            table.AddCell(priceCell);
 
             doc.Add(table);
-            doc.Add(new Paragraph("═══════════════════════════", normal));
-
-            // Total
-            PdfPTable totalTable = new PdfPTable(2);
-            totalTable.WidthPercentage = 100;
-            totalTable.SetWidths(new float[] { 3f, 2f });
-            totalTable.DefaultCell.Border = Rectangle.NO_BORDER;
-
-            PdfPCell label = new PdfPCell(new Phrase("TOTAL AMOUNT DUE:", total));
-            label.Border = Rectangle.NO_BORDER;
-            totalTable.AddCell(label);
-
-            PdfPCell amount = new PdfPCell(new Phrase(PriceFormatter.Format(receipt.FinalAmount), total));
-            amount.Border = Rectangle.NO_BORDER;
-            amount.HorizontalAlignment = Element.ALIGN_RIGHT;
-            totalTable.AddCell(amount);
-
-            doc.Add(totalTable);
-            doc.Add(new Paragraph("═══════════════════════════", normal));
-            doc.Add(new Paragraph(" "));
         }
 
-        private static void AddPaymentInfo(Document doc, ReceiptData receipt, Font normal, Font bold, Font small)
+        private static void AddDashedLine(Document doc, Font font)
         {
-            doc.Add(new Paragraph("PAYMENT METHOD", bold));
-            doc.Add(new Paragraph("───────────────────────────", small));
-            doc.Add(new Paragraph($"Payment Type: {receipt.PaymentMethod}", normal));
-
-            if (receipt.PaymentMethod == "Cash")
-            {
-                doc.Add(new Paragraph($"Amount Tendered: {PriceFormatter.Format(receipt.CashReceived)}", normal));
-                doc.Add(new Paragraph($"Change: {PriceFormatter.Format(receipt.Change)}", normal));
-            }
-            else if (receipt.PaymentMethod == "GCash")
-            {
-                doc.Add(new Paragraph($"Reference No: {receipt.GCashReference}", normal));
-            }
-
-            doc.Add(new Paragraph("═══════════════════════════", normal));
-            doc.Add(new Paragraph(" "));
+            Paragraph line = new Paragraph("- - - - - - - - - - - - - - - - - - - - - - - -", font);
+            line.Alignment = Element.ALIGN_CENTER;
+            line.SpacingAfter = 3f;
+            line.SpacingBefore = 3f;
+            doc.Add(line);
         }
 
-        private static void AddFooter(Document doc, Font bold, Font normal, Font small)
+        private static void AddSolidLine(Document doc, Font font)
         {
-            Paragraph thanks = new Paragraph("Thank you for playing!", bold);
-            thanks.Alignment = Element.ALIGN_CENTER;
-            doc.Add(thanks);
-
-            Paragraph visit = new Paragraph("Please visit us again!", normal);
-            visit.Alignment = Element.ALIGN_CENTER;
-            doc.Add(visit);
-
-            doc.Add(new Paragraph(" "));
-
-            Paragraph footer = new Paragraph("This serves as your official receipt.\nPlease keep for your records.", small);
-            footer.Alignment = Element.ALIGN_CENTER;
-            doc.Add(footer);
+            Paragraph line = new Paragraph("═══════════════════════════════════", font);
+            line.Alignment = Element.ALIGN_CENTER;
+            line.SpacingAfter = 3f;
+            line.SpacingBefore = 3f;
+            doc.Add(line);
         }
     }
 

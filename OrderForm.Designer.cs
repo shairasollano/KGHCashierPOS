@@ -56,6 +56,7 @@
             this.lblOrderNum = new System.Windows.Forms.Label();
             this.timerDateTime1 = new System.Windows.Forms.Timer(this.components);
             this.btnClear = new System.Windows.Forms.Button();
+            this.equipmentRentalControl1 = new KGHCashierPOS.EquipmentRentalControl();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel3.SuspendLayout();
@@ -385,10 +386,19 @@
             this.btnClear.UseVisualStyleBackColor = false;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // equipmentRentalControl1
+            // 
+            this.equipmentRentalControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.equipmentRentalControl1.Location = new System.Drawing.Point(402, 122);
+            this.equipmentRentalControl1.Name = "equipmentRentalControl1";
+            this.equipmentRentalControl1.Size = new System.Drawing.Size(498, 548);
+            this.equipmentRentalControl1.TabIndex = 50;
+            // 
             // OrderForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
             this.ClientSize = new System.Drawing.Size(1256, 721);
+            this.Controls.Add(this.equipmentRentalControl1);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.lblOrderNum);
             this.Controls.Add(this.panel2);
@@ -446,5 +456,6 @@
         private System.Windows.Forms.Label lblOrderNum;
         private System.Windows.Forms.Timer timerDateTime1;
         private System.Windows.Forms.Button btnClear;
+        private EquipmentRentalControl equipmentRentalControl1;
     }
 }

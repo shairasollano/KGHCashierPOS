@@ -79,7 +79,22 @@ namespace KGHCashierPOS
         {
             _sessions = sessions;
             discountManager.ClearDiscount();
-            discountManager.SetSubtotal(total);
+
+            // ⭐ Calculate subtotal from sessions (includes equipment)
+            decimal calculatedTotal = 0;
+            if (sessions != null && sessions.Count > 0)
+            {
+                foreach (var session in sessions.Values)
+                {
+                    calculatedTotal += session.TotalPrice + session.EquipmentCost;
+                }
+            }
+            else
+            {
+                calculatedTotal = total;
+            }
+
+            discountManager.SetSubtotal(calculatedTotal);
 
             cboDiscountType.SelectedIndex = 0;
             txtDiscountAmount.Clear();
@@ -90,7 +105,10 @@ namespace KGHCashierPOS
             UpdateDisplays();
             InitializePaymentMethod();
 
-            System.Diagnostics.Debug.WriteLine($"=== Payment Data Loaded: {sessions.Count} sessions, ₱{total:N2} ===");
+            System.Diagnostics.Debug.WriteLine($"=== Payment Data Loaded ===");
+            System.Diagnostics.Debug.WriteLine($"Sessions: {sessions?.Count ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"Calculated Total: {calculatedTotal:C}");
+            System.Diagnostics.Debug.WriteLine($"Passed Total: {total:C}");
         }
 
         private void BuildTransactionSummary()
@@ -120,8 +138,34 @@ namespace KGHCashierPOS
                 summary.AppendLine($"       End Time:         {session.EndTime:hh:mm tt}");
                 summary.AppendLine($"       Duration:         {duration}");
                 summary.AppendLine($"       Rate:             {PriceFormatter.Format(hourlyRate)}/hour");
+                summary.AppendLine($"       Game Price:       {PriceFormatter.Format(session.TotalPrice)}");
+
+                // ⭐ ADD EQUIPMENT DETAILS
+                if (session.Equipment != null && session.Equipment.Count > 0)
+                {
+                    summary.AppendLine("       Equipment:");
+
+                    foreach (var eq in session.Equipment)
+                    {
+                        /* if (eq.DefaultQuantity > 0)
+                        {
+                            summary.AppendLine($"     {eq.Name} x{eq.DefaultQuantity} (Included)");
+                        } */
+
+                        if (eq.RentalQuantity > 0)
+                        {
+                            summary.AppendLine($"  {eq.Name} ");
+                        }
+                    }
+
+                    if (session.EquipmentCost > 0)
+                    {
+                        summary.AppendLine($"       Equipment Cost:   {PriceFormatter.Format(session.EquipmentCost)}");
+                    }
+                }
+
                 summary.AppendLine("       ───────────────────────────────────────────────");
-                summary.AppendLine($"       Subtotal:         {PriceFormatter.Format(session.TotalPrice)}");
+                summary.AppendLine($"       Subtotal:         {PriceFormatter.Format(session.TotalPrice + session.EquipmentCost)}");
                 summary.AppendLine();
             }
 
@@ -423,12 +467,10 @@ namespace KGHCashierPOS
                 lblDiscountAmount.ForeColor = Color.Red;
             }
 
-            if (lblTotalAmount != null)
-                lblTotalAmount.Text = PriceFormatter.Format(calculator.GetFinalAmount());
-
+            // Recalculate change when totals change
             if (rbCash != null && rbCash.Checked)
             {
-                ValidateCashPayment();  // This will update lblChange
+                ValidateCashPayment();
             }
         }
 

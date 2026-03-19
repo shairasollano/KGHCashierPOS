@@ -6,7 +6,7 @@ namespace KGHCashierPOS
 {
     public static class PaymentRepository
     {
-        // ============ SAVE SESSION ============
+        // ============ SAVE SESSION WITH EQUIPMENT ============
         public static int SaveSession(GameSession session)
         {
             int sessionId = 0;
@@ -17,30 +17,76 @@ namespace KGHCashierPOS
                 {
                     conn.Open();
 
-                    string query = @"
-                        INSERT INTO sessions
-                        (game_name, start_time, end_time, total_minutes, total_price, status)
-                        VALUES
-                        (@game, @start, @end, @minutes, @price, 'Completed');
-                        SELECT LAST_INSERT_ID();";
-
-                    using (var cmd = new MySqlCommand(query, conn))
+                    using (var transaction = conn.BeginTransaction())
                     {
-                        cmd.Parameters.AddWithValue("@game", session.GameName);
-                        cmd.Parameters.AddWithValue("@start", session.StartTime);
-                        cmd.Parameters.AddWithValue("@end", session.EndTime);
-                        cmd.Parameters.AddWithValue("@minutes", session.TotalMinutes);
-                        cmd.Parameters.AddWithValue("@price", session.TotalPrice);
+                        try
+                        {
+                            // Step 1: Save session
+                            string query = @"
+                                INSERT INTO sessions
+                                (game_name, start_time, end_time, total_minutes, total_price, status)
+                                VALUES
+                                (@game, @start, @end, @minutes, @price, 'Completed');
+                                SELECT LAST_INSERT_ID();";
 
-                        sessionId = Convert.ToInt32(cmd.ExecuteScalar());
+                            using (var cmd = new MySqlCommand(query, conn, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@game", session.GameName);
+                                cmd.Parameters.AddWithValue("@start", session.StartTime);
+                                cmd.Parameters.AddWithValue("@end", session.EndTime);
+                                cmd.Parameters.AddWithValue("@minutes", session.TotalMinutes);
+                                cmd.Parameters.AddWithValue("@price", session.TotalPrice);
+
+                                sessionId = Convert.ToInt32(cmd.ExecuteScalar());
+                                System.Diagnostics.Debug.WriteLine($"✓ Session saved: {session.GameName} (ID: {sessionId})");
+                            }
+
+                            // ⭐ Step 2: Save equipment for this session
+                            if (session.Equipment != null && session.Equipment.Count > 0)
+                            {
+                                foreach (var equipment in session.Equipment)
+                                {
+                                    if (equipment.RentalQuantity > 0 || equipment.DefaultQuantity > 0)
+                                    {
+                                        string equipQuery = @"
+                                            INSERT INTO session_equipment 
+                                            (session_id, equipment_name, quantity, price_per_unit, equipment_type, total_cost)
+                                            VALUES 
+                                            (@sessionId, @name, @qty, @price, @type, @totalCost)";
+
+                                        using (var cmd = new MySqlCommand(equipQuery, conn, transaction))
+                                        {
+                                            cmd.Parameters.AddWithValue("@sessionId", sessionId);
+                                            cmd.Parameters.AddWithValue("@name", equipment.Name);
+                                            cmd.Parameters.AddWithValue("@qty", equipment.RentalQuantity);
+                                            cmd.Parameters.AddWithValue("@price", equipment.Price);
+                                            cmd.Parameters.AddWithValue("@type", equipment.Type);
+                                            cmd.Parameters.AddWithValue("@totalCost", equipment.TotalCost);
+
+                                            cmd.ExecuteNonQuery();
+
+                                            System.Diagnostics.Debug.WriteLine(
+                                                $"  ✓ Session equipment: {equipment.Name} x{equipment.RentalQuantity} " +
+                                                $"({equipment.Type}) = {equipment.TotalCost:C}"
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            throw new Exception($"Session save failed: {ex.Message}", ex);
+                        }
                     }
                 }
-
-                System.Diagnostics.Debug.WriteLine($"Session saved: ID={sessionId}, Game={session.GameName}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving session: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ SaveSession Error: {ex.Message}");
                 throw;
             }
 
@@ -79,11 +125,11 @@ namespace KGHCashierPOS
                     }
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Payment saved: Receipt={payment.ReceiptNo}");
+                System.Diagnostics.Debug.WriteLine($"✓ Payment saved: {payment.ReceiptNo}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving payment: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ SavePayment Error: {ex.Message}");
                 throw;
             }
         }
@@ -113,22 +159,8 @@ namespace KGHCashierPOS
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error checking duplicate: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"❌ Duplicate check error: {ex.Message}");
                 return false;
-            }
-        }
-
-        // ============ UPDATE ORDER STATUS ============
-        public static void UpdateOrderStatus(string orderNumber, string status)
-        {
-            try
-            {
-                OrderRepository.UpdateOrderStatus(orderNumber, status);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error updating order status: {ex.Message}");
-                throw;
             }
         }
     }

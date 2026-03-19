@@ -11,12 +11,14 @@ namespace KGHCashierPOS
         public void SetSubtotal(decimal subtotal)
         {
             SubtotalAmount = subtotal;
+            System.Diagnostics.Debug.WriteLine($"DiscountManager - Subtotal set: {subtotal:C}");
         }
 
         public void ClearDiscount()
         {
             DiscountAmount = 0;
             DiscountType = "None";
+            System.Diagnostics.Debug.WriteLine("DiscountManager - Discount cleared");
         }
 
         public bool ApplyPercentageDiscount(decimal percentage, string discountName)
@@ -26,6 +28,12 @@ namespace KGHCashierPOS
 
             DiscountAmount = SubtotalAmount * percentage;
             DiscountType = discountName;
+
+            System.Diagnostics.Debug.WriteLine($"DiscountManager - Percentage discount applied:");
+            System.Diagnostics.Debug.WriteLine($"  Subtotal: {SubtotalAmount:C}");
+            System.Diagnostics.Debug.WriteLine($"  Percentage: {percentage:P}");
+            System.Diagnostics.Debug.WriteLine($"  Discount: {DiscountAmount:C}");
+
             return true;
         }
 
@@ -36,6 +44,9 @@ namespace KGHCashierPOS
 
             DiscountAmount = amount;
             DiscountType = discountName;
+
+            System.Diagnostics.Debug.WriteLine($"DiscountManager - Custom discount applied: {amount:C}");
+
             return true;
         }
 

@@ -37,6 +37,24 @@ namespace KGHCashierPOS
         public decimal EquipmentCost { get; set; } = 0;
         public decimal GrandTotal => TotalPrice + EquipmentCost;
 
+        public string GetDurationText()
+        {
+            if (TotalMinutes < 60)
+            {
+                return $"{TotalMinutes} min";
+            }
+            else
+            {
+                int hours = TotalMinutes / 60;
+                int minutes = TotalMinutes % 60;
+
+                if (minutes == 0)
+                    return $"{hours} hr";
+                else
+                    return $"{hours} hr {minutes} min";
+            }
+        }
+
     }
 
 }
