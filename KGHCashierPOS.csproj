@@ -171,24 +171,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ButtonStyleHelper.cs" />
+    <Compile Include="POSClasses\ButtonStyleHelper.cs" />
     <Compile Include="CashierForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CashierForm.Designer.cs">
       <DependentUpon>CashierForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="CashierFormModels.cs" />
-    <Compile Include="Database.cs" />
-    <Compile Include="DiscountManager.cs" />
-    <Compile Include="DurationFormatter.cs" />
+    <Compile Include="POSClasses\CashierFormModels.cs" />
+    <Compile Include="POSClasses\Database.cs" />
+    <Compile Include="POSClasses\DiscountManager.cs" />
+    <Compile Include="POSClasses\DurationFormatter.cs" />
     <Compile Include="EquipmentItemControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="EquipmentItemControl.Designer.cs">
       <DependentUpon>EquipmentItemControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="EquipmentManager.cs" />
+    <Compile Include="POSClasses\EquipmentManager.cs" />
     <Compile Include="EquipmentRentalControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -198,34 +198,22 @@
     <Compile Include="EquipmentSelectionDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="extratodelete.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="extratodelete.Designer.cs">
-      <DependentUpon>extratodelete.cs</DependentUpon>
-    </Compile>
-    <Compile Include="GameSession.cs" />
-    <Compile Include="NumericKeyboardControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="NumericKeyboardControl.Designer.cs">
-      <DependentUpon>NumericKeyboardControl.cs</DependentUpon>
-    </Compile>
+    <Compile Include="POSClasses\GameSession.cs" />
     <Compile Include="OrderForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="OrderForm.Designer.cs">
       <DependentUpon>OrderForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="OrderFormModels.cs" />
-    <Compile Include="OrderNumberGenerator.cs" />
-    <Compile Include="OrderRepository.cs" />
-    <Compile Include="PaymentCalculator.cs" />
-    <Compile Include="PaymentRepository.cs" />
-    <Compile Include="PaymentValidator.cs" />
-    <Compile Include="PDFGenerator.cs" />
-    <Compile Include="PriceFormatter.cs" />
-    <Compile Include="PriceManager.cs" />
+    <Compile Include="POSClasses\OrderFormModels.cs" />
+    <Compile Include="POSClasses\OrderNumberGenerator.cs" />
+    <Compile Include="POSClasses\OrderRepository.cs" />
+    <Compile Include="POSClasses\PaymentCalculator.cs" />
+    <Compile Include="POSClasses\PaymentRepository.cs" />
+    <Compile Include="POSClasses\PaymentValidator.cs" />
+    <Compile Include="POSClasses\PDFGenerator.cs" />
+    <Compile Include="POSClasses\PriceFormatter.cs" />
+    <Compile Include="POSClasses\PriceManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PaymentControl.cs">
@@ -234,8 +222,8 @@
     <Compile Include="PaymentControl.Designer.cs">
       <DependentUpon>PaymentControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="ReceiptGenerator.cs" />
-    <Compile Include="ValidationHelper.cs" />
+    <Compile Include="POSClasses\ReceiptGenerator.cs" />
+    <Compile Include="POSClasses\ValidationHelper.cs" />
     <EmbeddedResource Include="CashierForm.resx">
       <DependentUpon>CashierForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -244,12 +232,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EquipmentRentalControl.resx">
       <DependentUpon>EquipmentRentalControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="extratodelete.resx">
-      <DependentUpon>extratodelete.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="NumericKeyboardControl.resx">
-      <DependentUpon>NumericKeyboardControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OrderForm.resx">
       <DependentUpon>OrderForm.cs</DependentUpon>
@@ -301,5 +283,6 @@
   <ItemGroup>
     <None Include="Resources\1HOUR.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

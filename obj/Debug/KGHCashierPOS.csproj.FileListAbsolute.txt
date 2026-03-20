@@ -83,8 +83,8 @@ C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\System.Threading.Tasks.Extens
 C:\Users\User\source\repos\KGHCashierPOS\bin\Debug\System.ValueTuple.xml
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.csproj.AssemblyReference.cache
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.CashierForm.resources
-C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.extratodelete.resources
-C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.NumericKeyboardControl.resources
+C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.EquipmentItemControl.resources
+C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.EquipmentRentalControl.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.OrderForm.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.paymentControl1.resources
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.Properties.Resources.resources
@@ -93,5 +93,3 @@ C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.csproj.CoreComp
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashi.BF22D446.Up2Date
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.exe
 C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.pdb
-C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.EquipmentItemControl.resources
-C:\Users\User\source\repos\KGHCashierPOS\obj\Debug\KGHCashierPOS.EquipmentRentalControl.resources
