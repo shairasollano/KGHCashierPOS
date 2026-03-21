@@ -31,6 +31,7 @@ namespace KGHCashierPOS
         {
             calculator.Calculate(_sessions, discountManager.DiscountAmount);
             UpdateDisplays();
+            CenterInParent();
         }
 
         // ============ INITIALIZATION ============
@@ -676,6 +677,19 @@ namespace KGHCashierPOS
 
             // Show preview
             previewForm.ShowDialog();
+        }
+
+
+
+        public void CenterInParent()
+        {
+            if (this.Parent != null)
+            {
+                this.Location = new Point(
+                    (this.Parent.ClientSize.Width - this.Width) / 2,
+                    (this.Parent.ClientSize.Height - this.Height) / 2
+                );
+            }
         }
     }
 }

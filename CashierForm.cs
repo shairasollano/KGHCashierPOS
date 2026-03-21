@@ -12,6 +12,8 @@ namespace KGHCashierPOS
         // ============ MANAGERS ============
         private CashierSessionManager sessionManager;
         private paymentControl1 paymentControl;
+        private EquipmentRentalControl equipmentRentalControl;
+
 
         // ============ CONSTRUCTOR ============
         public CashierForm()
@@ -27,9 +29,26 @@ namespace KGHCashierPOS
             paymentControl.PaymentSuccessful += OnPaymentSuccessful;
             this.Controls.Add(paymentControl);
 
+            InitializeEquipmentControl();
+
             InitializeButtonStyles();
             InitializeRichTextBox();  // ⭐ NEW
+
         }
+
+        // ⭐ NEW METHOD - Equipment Control
+        private void InitializeEquipmentControl()
+        {
+            equipmentRentalControl = new EquipmentRentalControl();
+            equipmentRentalControl.Visible = false;
+            equipmentRentalControl.Location = new Point(
+                (this.ClientSize.Width - equipmentRentalControl.Width) / 2,
+                (this.ClientSize.Height - equipmentRentalControl.Height) / 2
+            );
+            equipmentRentalControl.BringToFront();
+            this.Controls.Add(equipmentRentalControl);
+        }
+
 
         private void InitializeButtonStyles()
         {
@@ -122,7 +141,7 @@ namespace KGHCashierPOS
                 return;
             }
 
-            // Check for equipment
+            // ⭐ Check if game has equipment
             if (sessionManager.HasEquipment(sessionManager.SelectedGame))
             {
                 ShowEquipmentSelection(minutes);
@@ -133,28 +152,105 @@ namespace KGHCashierPOS
             }
         }
 
+
         // ============ EQUIPMENT SELECTION ============
+        // ⭐ NEW METHOD - Show Equipment Modal
         private void ShowEquipmentSelection(int minutes)
         {
             var equipment = sessionManager.GetEquipmentForGame(sessionManager.SelectedGame);
 
-            using (var dialog = new EquipmentSelectionDialog(sessionManager.SelectedGame, equipment))
-            {
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    sessionManager.AddOrExtendSession(
-                        sessionManager.SelectedGame,
-                        minutes,
-                        dialog.SelectedEquipment,
-                        dialog.TotalEquipmentCost
-                    );
+            // ⭐ Disable other controls while modal is open
+            btnBilliards.Enabled = false;
+            btnScooter.Enabled = false;
+            btnBadminton.Enabled = false;
+            btnTableTennis.Enabled = false;
+            btn30min.Enabled = false;
+            btn1hour.Enabled = false;
 
-                    RefreshDisplay();  // ⭐ Changed from RefreshListView
-                    ResetGameSelection();
-                }
+            // Show overlay
+            if (panelOverlay != null)
+            {
+                panelOverlay.Visible = true;
+                panelOverlay.BringToFront();
             }
+
+            // Load and show equipment control
+            equipmentRentalControl.LoadEquipment(sessionManager.SelectedGame, equipment);
+            equipmentRentalControl.Visible = true;
+            equipmentRentalControl.BringToFront();
+
+            // Wait for user action
+            Timer checkTimer = new Timer();
+            checkTimer.Interval = 100;
+            int capturedMinutes = minutes;
+
+            checkTimer.Tick += (s, e) =>
+            {
+                if (!equipmentRentalControl.Visible)
+                {
+                    checkTimer.Stop();
+
+                    // ⭐ Re-enable controls
+                    btnBilliards.Enabled = true;
+                    btnScooter.Enabled = true;
+                    btnBadminton.Enabled = true;
+                    btnTableTennis.Enabled = true;
+                    btn30min.Enabled = true;
+                    btn1hour.Enabled = true;
+
+                    // Hide overlay
+                    if (panelOverlay != null)
+                    {
+                        panelOverlay.Visible = false;
+                    }
+
+                    // Process result
+                    if (equipmentRentalControl.IsConfirmed)
+                    {
+                        AddSessionWithEquipment(
+                            capturedMinutes,
+                            equipmentRentalControl.SelectedEquipment,
+                            equipmentRentalControl.TotalEquipmentCost
+                        );
+                    }
+
+                    checkTimer.Dispose();
+                }
+            };
+
+            checkTimer.Start();
         }
 
+        // ⭐ NEW METHOD - Add Session With Equipment
+        private void AddSessionWithEquipment(int minutes, List<Equipment> equipment, decimal equipmentCost)
+        {
+            sessionManager.AddOrExtendSession(
+                sessionManager.SelectedGame,
+                minutes,
+                equipment,
+                equipmentCost
+            );
+
+            RefreshDisplay();
+            ResetGameSelection();
+
+            // Show confirmation
+            string equipSummary = equipmentCost > 0
+                ? $"\nEquipment: {PriceFormatter.Format(equipmentCost)}"
+                : "";
+
+            MessageBox.Show(
+                $"{sessionManager.SelectedGame} added!\n" +
+                $"Duration: {DurationFormatter.Format(minutes)}\n" +
+                $"Game: {PriceFormatter.Format(PriceManager.GetPrice(sessionManager.SelectedGame, minutes))}" +
+                equipSummary,
+                "Session Added",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+        }
+
+        // ⭐ EXISTING METHOD - Add Without Equipment
         private void AddSessionWithoutEquipment(int minutes)
         {
             sessionManager.AddOrExtendSession(
@@ -164,8 +260,17 @@ namespace KGHCashierPOS
                 0
             );
 
-            RefreshDisplay();  // ⭐ Changed from RefreshListView
+            RefreshDisplay();
             ResetGameSelection();
+
+            MessageBox.Show(
+                $"{sessionManager.SelectedGame} added!\n" +
+                $"Duration: {DurationFormatter.Format(minutes)}\n" +
+                $"Price: {PriceFormatter.Format(PriceManager.GetPrice(sessionManager.SelectedGame, minutes))}",
+                "Session Added",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
         }
 
         private void ResetGameSelection()

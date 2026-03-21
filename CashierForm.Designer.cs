@@ -69,6 +69,8 @@
             this.btnClearCashierForm = new System.Windows.Forms.Button();
             this.timerDateTime = new System.Windows.Forms.Timer(this.components);
             this.rtbSelectedGames = new System.Windows.Forms.RichTextBox();
+            this.panelOverlay = new System.Windows.Forms.Panel();
+            this.equipmentRentalControl1 = new KGHCashierPOS.EquipmentRentalControl();
             this.paymentPanel = new KGHCashierPOS.paymentControl1();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -552,10 +554,29 @@
             this.rtbSelectedGames.TabIndex = 36;
             this.rtbSelectedGames.Text = "";
             // 
+            // panelOverlay
+            // 
+            this.panelOverlay.BackColor = System.Drawing.Color.Black;
+            this.panelOverlay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelOverlay.Location = new System.Drawing.Point(0, 0);
+            this.panelOverlay.Name = "panelOverlay";
+            this.panelOverlay.Size = new System.Drawing.Size(1252, 717);
+            this.panelOverlay.TabIndex = 38;
+            this.panelOverlay.Visible = false;
+            // 
+            // equipmentRentalControl1
+            // 
+            this.equipmentRentalControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.equipmentRentalControl1.Location = new System.Drawing.Point(377, 84);
+            this.equipmentRentalControl1.Name = "equipmentRentalControl1";
+            this.equipmentRentalControl1.Size = new System.Drawing.Size(498, 548);
+            this.equipmentRentalControl1.TabIndex = 37;
+            this.equipmentRentalControl1.Visible = false;
+            // 
             // paymentPanel
             // 
             this.paymentPanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.paymentPanel.Location = new System.Drawing.Point(0, 71);
+            this.paymentPanel.Location = new System.Drawing.Point(-13, 33);
             this.paymentPanel.Margin = new System.Windows.Forms.Padding(0);
             this.paymentPanel.Name = "paymentPanel";
             this.paymentPanel.Size = new System.Drawing.Size(1278, 650);
@@ -568,6 +589,7 @@
             this.AutoSize = true;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1252, 717);
+            this.Controls.Add(this.equipmentRentalControl1);
             this.Controls.Add(this.rtbSelectedGames);
             this.Controls.Add(this.totalValue);
             this.Controls.Add(this.btnEnter);
@@ -592,9 +614,11 @@
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.paymentPanel);
+            this.Controls.Add(this.panelOverlay);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "CashierForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.CashierForm_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -650,6 +674,8 @@
         private System.Windows.Forms.Timer timerDateTime;
         private paymentControl1 paymentPanel;
         private System.Windows.Forms.RichTextBox rtbSelectedGames;
+        private EquipmentRentalControl equipmentRentalControl1;
+        private System.Windows.Forms.Panel panelOverlay;
     }
 }
 

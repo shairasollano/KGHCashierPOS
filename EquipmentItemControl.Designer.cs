@@ -31,10 +31,10 @@
             this.lblEquipmentName = new System.Windows.Forms.Label();
             this.lblPrice = new System.Windows.Forms.Label();
             this.lblType = new System.Windows.Forms.Label();
-            this.btnMinus = new System.Windows.Forms.Button();
             this.lblQuantity = new System.Windows.Forms.Label();
-            this.btnPlus = new System.Windows.Forms.Button();
             this.lblDefaultInfo = new System.Windows.Forms.Label();
+            this.btnPlus = new System.Windows.Forms.Button();
+            this.btnMinus = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblEquipmentName
@@ -71,25 +71,6 @@
             this.lblType.Text = "RENTAL ";
             this.lblType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // btnMinus
-            // 
-            this.btnMinus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(67)))), ((int)(((byte)(54)))));
-            this.btnMinus.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.btnMinus.Enabled = false;
-            this.btnMinus.FlatAppearance.BorderSize = 0;
-            this.btnMinus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMinus.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnMinus.ForeColor = System.Drawing.Color.White;
-            this.btnMinus.Location = new System.Drawing.Point(250, 25);
-            this.btnMinus.Margin = new System.Windows.Forms.Padding(0);
-            this.btnMinus.Name = "btnMinus";
-            this.btnMinus.Size = new System.Drawing.Size(40, 40);
-            this.btnMinus.TabIndex = 3;
-            this.btnMinus.Text = "-";
-            this.btnMinus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnMinus.UseVisualStyleBackColor = false;
-            this.btnMinus.Click += new System.EventHandler(this.btnMinus_Click);
-            // 
             // lblQuantity
             // 
             this.lblQuantity.AutoSize = true;
@@ -101,24 +82,6 @@
             this.lblQuantity.Text = "0";
             this.lblQuantity.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // btnPlus
-            // 
-            this.btnPlus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
-            this.btnPlus.Enabled = false;
-            this.btnPlus.FlatAppearance.BorderSize = 0;
-            this.btnPlus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnPlus.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnPlus.ForeColor = System.Drawing.Color.White;
-            this.btnPlus.Location = new System.Drawing.Point(350, 25);
-            this.btnPlus.Margin = new System.Windows.Forms.Padding(0);
-            this.btnPlus.Name = "btnPlus";
-            this.btnPlus.Size = new System.Drawing.Size(40, 40);
-            this.btnPlus.TabIndex = 5;
-            this.btnPlus.Text = "+";
-            this.btnPlus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
-            this.btnPlus.UseVisualStyleBackColor = false;
-            this.btnPlus.Click += new System.EventHandler(this.btnPlus_Click);
-            // 
             // lblDefaultInfo
             // 
             this.lblDefaultInfo.AutoSize = true;
@@ -129,6 +92,44 @@
             this.lblDefaultInfo.Size = new System.Drawing.Size(98, 21);
             this.lblDefaultInfo.TabIndex = 6;
             this.lblDefaultInfo.Text = "✓ 2 Included";
+            // 
+            // btnPlus
+            // 
+            this.btnPlus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
+            this.btnPlus.BackgroundImage = global::KGHCashierPOS.Properties.Resources.PLUS;
+            this.btnPlus.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.btnPlus.Enabled = false;
+            this.btnPlus.FlatAppearance.BorderSize = 0;
+            this.btnPlus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPlus.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnPlus.ForeColor = System.Drawing.Color.White;
+            this.btnPlus.Location = new System.Drawing.Point(342, 25);
+            this.btnPlus.Margin = new System.Windows.Forms.Padding(0);
+            this.btnPlus.Name = "btnPlus";
+            this.btnPlus.Size = new System.Drawing.Size(45, 45);
+            this.btnPlus.TabIndex = 5;
+            this.btnPlus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnPlus.UseVisualStyleBackColor = false;
+            this.btnPlus.Click += new System.EventHandler(this.btnPlus_Click);
+            // 
+            // btnMinus
+            // 
+            this.btnMinus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(67)))), ((int)(((byte)(54)))));
+            this.btnMinus.BackgroundImage = global::KGHCashierPOS.Properties.Resources.MINUS;
+            this.btnMinus.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.btnMinus.Enabled = false;
+            this.btnMinus.FlatAppearance.BorderSize = 0;
+            this.btnMinus.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnMinus.Font = new System.Drawing.Font("Segoe UI Black", 20F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnMinus.ForeColor = System.Drawing.Color.White;
+            this.btnMinus.Location = new System.Drawing.Point(248, 25);
+            this.btnMinus.Margin = new System.Windows.Forms.Padding(0);
+            this.btnMinus.Name = "btnMinus";
+            this.btnMinus.Size = new System.Drawing.Size(45, 45);
+            this.btnMinus.TabIndex = 3;
+            this.btnMinus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            this.btnMinus.UseVisualStyleBackColor = false;
+            this.btnMinus.Click += new System.EventHandler(this.btnMinus_Click);
             // 
             // EquipmentItemControl
             // 

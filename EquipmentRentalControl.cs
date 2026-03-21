@@ -52,8 +52,9 @@ namespace KGHCashierPOS
         {
             _gameName = gameName;
             _equipmentList = equipment;
+            IsConfirmed = false;  // ⭐ Reset confirmed state
 
-           
+            
             lblTitle.Text = $"{gameName} - Equipment Rental";
 
             flowPanelEquipment.Controls.Clear();
@@ -63,14 +64,14 @@ namespace KGHCashierPOS
                 EquipmentItemControl itemControl = new EquipmentItemControl();
                 itemControl.Equipment = eq;
                 itemControl.QuantityChanged += ItemControl_QuantityChanged;
-
-                itemControl.Width = flowPanelEquipment.ClientSize.Width - 10;
+                itemControl.Width = flowPanelEquipment.Width - 30;
 
                 flowPanelEquipment.Controls.Add(itemControl);
-                this.Refresh();
             }
 
             UpdateTotal();
+
+            System.Diagnostics.Debug.WriteLine($"Equipment loaded for {gameName}: {equipment.Count} items");
         }
 
         private void ItemControl_QuantityChanged(object sender, EventArgs e)
@@ -87,28 +88,35 @@ namespace KGHCashierPOS
         {
             IsConfirmed = true;
 
-            // Hide this control (parent form will handle it)
-            this.Visible = false;
-
             System.Diagnostics.Debug.WriteLine($"Equipment confirmed: {TotalEquipmentCost:C}");
+            foreach (var eq in _equipmentList)
+            {
+                if (eq.RentalQuantity > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  {eq.Name} x{eq.RentalQuantity} = {eq.TotalCost:C}");
+                }
+            }
+
+            // Hide this control
+            this.Visible = false;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
             IsConfirmed = false;
 
-            // Reset all quantities
-            if (_equipmentList != null)
+            // ⭐ Reset all quantities
+            foreach (var eq in _equipmentList)
             {
-                foreach (var eq in _equipmentList)
-                {
-                    eq.RentalQuantity = 0;
-                }
+                eq.RentalQuantity = 0;
             }
 
-            this.Visible = false;
+            UpdateTotal();
 
             System.Diagnostics.Debug.WriteLine("Equipment rental cancelled");
+
+            // Hide this control
+            this.Visible = false;
         }
 
         private void EquipmentRentalControl_Load(object sender, EventArgs e)
@@ -129,3 +137,4 @@ namespace KGHCashierPOS
 
     }
 }
+

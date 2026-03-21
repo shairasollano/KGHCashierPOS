@@ -391,7 +391,7 @@
             // equipmentRentalControl1
             // 
             this.equipmentRentalControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.equipmentRentalControl1.Location = new System.Drawing.Point(402, 122);
+            this.equipmentRentalControl1.Location = new System.Drawing.Point(379, 86);
             this.equipmentRentalControl1.Name = "equipmentRentalControl1";
             this.equipmentRentalControl1.Size = new System.Drawing.Size(498, 548);
             this.equipmentRentalControl1.TabIndex = 50;
@@ -418,6 +418,7 @@
             this.Name = "OrderForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "OrderForm";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
