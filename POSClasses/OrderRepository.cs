@@ -22,16 +22,13 @@ namespace KGHCashierPOS
                             // Step 1: Insert main order
                             string orderQuery = @"
                                 INSERT INTO orders 
-                                (order_number, customer_name, customer_age, customer_contact, total_amount, order_date, status)
+                                (order_number, total_amount, order_date, status)
                                 VALUES 
-                                (@orderNo, @name, @age, @contact, @total, @date, 'Pending')";
+                                (@orderNo, @total, @date, 'Pending')";
 
                             using (var cmd = new MySqlCommand(orderQuery, conn, transaction))
                             {
                                 cmd.Parameters.AddWithValue("@orderNo", orderNumber);
-                                cmd.Parameters.AddWithValue("@name", "Walk-in Customer");
-                                cmd.Parameters.AddWithValue("@age", DBNull.Value);
-                                cmd.Parameters.AddWithValue("@contact", DBNull.Value);
                                 cmd.Parameters.AddWithValue("@total", totalAmount);
                                 cmd.Parameters.AddWithValue("@date", DateTime.Now);
 
@@ -42,7 +39,6 @@ namespace KGHCashierPOS
                             // Step 2: Insert order items with equipment
                             foreach (var item in items)
                             {
-                                // Insert order item
                                 string itemQuery = @"
                                     INSERT INTO order_items 
                                     (order_number, game_name, duration_minutes, price, equipment_cost)
@@ -51,7 +47,6 @@ namespace KGHCashierPOS
                                     SELECT LAST_INSERT_ID();";
 
                                 int itemId = 0;
-
                                 using (var cmd = new MySqlCommand(itemQuery, conn, transaction))
                                 {
                                     cmd.Parameters.AddWithValue("@orderNo", orderNumber);
@@ -61,18 +56,14 @@ namespace KGHCashierPOS
                                     cmd.Parameters.AddWithValue("@equipCost", item.EquipmentCost);
 
                                     itemId = Convert.ToInt32(cmd.ExecuteScalar());
-                                    System.Diagnostics.Debug.WriteLine($"  ✓ Item saved: {item.GameName} (ID: {itemId})");
                                 }
 
                                 // ⭐ Step 3: Insert equipment details
-                                if (item.Equipment != null && item.Equipment.Count > 0)
+                                if (item.Equipment != null)
                                 {
                                     foreach (var equipment in item.Equipment)
                                     {
-                                        // Save all equipment (including defaults with 0 rental quantity)
-                                        int totalQuantity = equipment.DefaultQuantity + equipment.RentalQuantity;
-
-                                        if (totalQuantity > 0)
+                                        if (equipment.RentalQuantity > 0 || equipment.DefaultQuantity > 0)
                                         {
                                             string equipQuery = @"
                                                 INSERT INTO order_equipment 
@@ -84,17 +75,12 @@ namespace KGHCashierPOS
                                             {
                                                 cmd.Parameters.AddWithValue("@itemId", itemId);
                                                 cmd.Parameters.AddWithValue("@name", equipment.Name);
-                                                cmd.Parameters.AddWithValue("@qty", equipment.RentalQuantity);
+                                                cmd.Parameters.AddWithValue("@qty", equipment.RentalQuantity + equipment.DefaultQuantity);
                                                 cmd.Parameters.AddWithValue("@price", equipment.Price);
                                                 cmd.Parameters.AddWithValue("@type", equipment.Type);
                                                 cmd.Parameters.AddWithValue("@totalCost", equipment.TotalCost);
 
                                                 cmd.ExecuteNonQuery();
-
-                                                System.Diagnostics.Debug.WriteLine(
-                                                    $"    ✓ Equipment: {equipment.Name} x{equipment.RentalQuantity} " +
-                                                    $"({equipment.Type}) = {equipment.TotalCost:C}"
-                                                );
                                             }
                                         }
                                     }
@@ -301,11 +287,10 @@ namespace KGHCashierPOS
                 using (var conn = new MySqlConnection(Database.ConnectionString))
                 {
                     conn.Open();
-
+                    // Removed customer_name from the SELECT query
                     string query = @"
                         SELECT 
                             order_number,
-                            customer_name,
                             total_amount,
                             order_date,
                             status
@@ -315,7 +300,6 @@ namespace KGHCashierPOS
                     using (var cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@orderNo", orderNumber);
-
                         using (var reader = cmd.ExecuteReader())
                         {
                             if (reader.Read())
@@ -323,7 +307,7 @@ namespace KGHCashierPOS
                                 return new OrderDetails
                                 {
                                     OrderNumber = reader.GetString("order_number"),
-                                    CustomerName = reader.GetString("customer_name"),
+                                    CustomerName = "Walk-in Customer", // Set as static since not in DB
                                     TotalAmount = reader.GetDecimal("total_amount"),
                                     OrderDate = reader.GetDateTime("order_date"),
                                     Status = reader.GetString("status")
