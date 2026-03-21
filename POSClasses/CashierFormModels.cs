@@ -321,10 +321,20 @@ namespace KGHCashierPOS
     // ============ ORDER ITEM DATA ============
     public class OrderItemData
     {
+        // Database fields
+        public int ItemId { get; set; }
         public string GameName { get; set; }
         public int Duration { get; set; }
         public decimal Price { get; set; }
         public decimal EquipmentCost { get; set; }
-        public decimal TotalPrice => Price + EquipmentCost;
+
+        // Equipment list
+        public List<Equipment> Equipment { get; set; } = new List<Equipment>();
+
+        // Calculated property
+        public decimal TotalPrice
+        {
+            get { return Price + EquipmentCost; }
+        }
     }
 }

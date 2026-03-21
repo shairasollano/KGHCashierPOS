@@ -385,6 +385,19 @@ namespace KGHCashierPOS
 
                 foreach (var item in items)
                 {
+
+                    GameSession session = new GameSession
+                    {
+                        GameName = item.GameName,
+                        TotalMinutes = item.Duration,
+                        TotalPrice = item.Price,
+                        EquipmentCost = item.EquipmentCost,
+                        Equipment = new List<Equipment>() // or map if you have data
+                    };
+
+                    // Use unique key (important)
+                    sessionManager.ActiveSessions[item.GameName + Guid.NewGuid()] = session;
+
                     string durationText = DurationFormatter.Format(item.Duration);
                     decimal itemTotal = item.TotalPrice;
                     orderTotal += itemTotal;
@@ -437,6 +450,9 @@ namespace KGHCashierPOS
         // ============ PROCEED TO PAYMENT ============
         private void btnProceedPayment_Click(object sender, EventArgs e)
         {
+
+            string orderNumberToPass = txtOrderNumber.Text.Trim();  // ⭐ Get order number
+
             if (sessionManager.ActiveSessions.Count == 0)
             {
                 if (string.IsNullOrWhiteSpace(rtbSelectedGames.Text) ||
@@ -489,7 +505,7 @@ namespace KGHCashierPOS
             // Show payment
             paymentControl.Visible = true;
             paymentControl.BringToFront();
-            paymentControl.LoadPaymentData(sessions, total);
+            paymentControl.LoadPaymentData(sessions, total, orderNumberToPass);  // ⭐ Pass order number
         }
 
         // ============ CLEAR & RESET ============
@@ -507,7 +523,7 @@ namespace KGHCashierPOS
             txtOrderNumber.Clear();
             rtbSelectedGames.Clear();
             lblTotal.Text = "₱0.00";
-            sessionManager.ClearAll();
+            
             ResetGameButtonColors();
             RefreshDisplay();
             txtOrderNumber.Focus();

@@ -21,12 +21,12 @@ namespace KGHCashierPOS
                     {
                         try
                         {
-                            // Step 1: Save session
+                            // ⭐ Step 1: Save session (including equipment_cost)
                             string query = @"
                                 INSERT INTO sessions
-                                (game_name, start_time, end_time, total_minutes, total_price, status)
+                                (game_name, start_time, end_time, total_minutes, total_price, equipment_cost, status)
                                 VALUES
-                                (@game, @start, @end, @minutes, @price, 'Completed');
+                                (@game, @start, @end, @minutes, @price, @equipCost, 'Completed');
                                 SELECT LAST_INSERT_ID();";
 
                             using (var cmd = new MySqlCommand(query, conn, transaction))
@@ -36,17 +36,28 @@ namespace KGHCashierPOS
                                 cmd.Parameters.AddWithValue("@end", session.EndTime);
                                 cmd.Parameters.AddWithValue("@minutes", session.TotalMinutes);
                                 cmd.Parameters.AddWithValue("@price", session.TotalPrice);
+                                cmd.Parameters.AddWithValue("@equipCost", session.EquipmentCost);
 
                                 sessionId = Convert.ToInt32(cmd.ExecuteScalar());
-                                System.Diagnostics.Debug.WriteLine($"✓ Session saved: {session.GameName} (ID: {sessionId})");
+
+                                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+                                System.Diagnostics.Debug.WriteLine($"✓ Session saved:");
+                                System.Diagnostics.Debug.WriteLine($"  Session ID: {sessionId}");
+                                System.Diagnostics.Debug.WriteLine($"  Game: {session.GameName}");
+                                System.Diagnostics.Debug.WriteLine($"  Game Price: {session.TotalPrice:C}");
+                                System.Diagnostics.Debug.WriteLine($"  Equipment Cost: {session.EquipmentCost:C}");
+                                System.Diagnostics.Debug.WriteLine($"  Total: {(session.TotalPrice + session.EquipmentCost):C}");
                             }
 
-                            // ⭐ Step 2: Save equipment for this session
+                            // ⭐ Step 2: Save equipment details to session_equipment table
                             if (session.Equipment != null && session.Equipment.Count > 0)
                             {
+                                System.Diagnostics.Debug.WriteLine("  Equipment Details:");
+
                                 foreach (var equipment in session.Equipment)
                                 {
-                                    if (equipment.RentalQuantity > 0 || equipment.DefaultQuantity > 0)
+                                    // Save both defaults (for tracking) and rentals
+                                    if (equipment.DefaultQuantity > 0 || equipment.RentalQuantity > 0)
                                     {
                                         string equipQuery = @"
                                             INSERT INTO session_equipment 
@@ -66,7 +77,7 @@ namespace KGHCashierPOS
                                             cmd.ExecuteNonQuery();
 
                                             System.Diagnostics.Debug.WriteLine(
-                                                $"  ✓ Session equipment: {equipment.Name} x{equipment.RentalQuantity} " +
+                                                $"    • {equipment.Name} x{equipment.RentalQuantity} " +
                                                 $"({equipment.Type}) = {equipment.TotalCost:C}"
                                             );
                                         }
@@ -75,10 +86,12 @@ namespace KGHCashierPOS
                             }
 
                             transaction.Commit();
+                            System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
                         }
                         catch (Exception ex)
                         {
                             transaction.Rollback();
+                            System.Diagnostics.Debug.WriteLine($"❌ Transaction rollback: {ex.Message}");
                             throw new Exception($"Session save failed: {ex.Message}", ex);
                         }
                     }
@@ -87,6 +100,7 @@ namespace KGHCashierPOS
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ SaveSession Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                 throw;
             }
 
@@ -104,32 +118,42 @@ namespace KGHCashierPOS
 
                     string query = @"
                         INSERT INTO payments
-                        (session_id, payment_method, amount_paid, discount_type,
-                         discount_amount, final_amount, receipt_no, amount_tendered, payment_date)
+                        (session_id, payment_method, amount_paid, payment_date, 
+                         amount_tendered, receipt_no, discount_type, discount_amount, final_amount)
                         VALUES
-                        (@sid, @method, @amt, @dtype, @disc, @final, @rno, @ref, @date)";
+                        (@sid, @method, @amt, @date, @tendered, @rno, @dtype, @disc, @final)";
 
                     using (var cmd = new MySqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@sid", payment.SessionId);
                         cmd.Parameters.AddWithValue("@method", payment.PaymentMethod);
                         cmd.Parameters.AddWithValue("@amt", payment.AmountPaid);
+                        cmd.Parameters.AddWithValue("@date", payment.PaymentDate);
+                        cmd.Parameters.AddWithValue("@tendered", payment.Reference);
+                        cmd.Parameters.AddWithValue("@rno", payment.ReceiptNo);
                         cmd.Parameters.AddWithValue("@dtype", payment.DiscountType);
                         cmd.Parameters.AddWithValue("@disc", payment.DiscountAmount);
                         cmd.Parameters.AddWithValue("@final", payment.FinalAmount);
-                        cmd.Parameters.AddWithValue("@rno", payment.ReceiptNo);
-                        cmd.Parameters.AddWithValue("@ref", payment.Reference);
-                        cmd.Parameters.AddWithValue("@date", payment.PaymentDate);
 
                         cmd.ExecuteNonQuery();
+
+                        System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+                        System.Diagnostics.Debug.WriteLine($"✓ Payment saved:");
+                        System.Diagnostics.Debug.WriteLine($"  Receipt: {payment.ReceiptNo}");
+                        System.Diagnostics.Debug.WriteLine($"  Session ID: {payment.SessionId}");
+                        System.Diagnostics.Debug.WriteLine($"  Method: {payment.PaymentMethod}");
+                        System.Diagnostics.Debug.WriteLine($"  Amount Paid: {payment.AmountPaid:C}");
+                        System.Diagnostics.Debug.WriteLine($"  Discount: {payment.DiscountAmount:C}");
+                        System.Diagnostics.Debug.WriteLine($"  Final Amount: {payment.FinalAmount:C}");
+                        System.Diagnostics.Debug.WriteLine($"  Reference: {payment.Reference}");
+                        System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
                     }
                 }
-
-                System.Diagnostics.Debug.WriteLine($"✓ Payment saved: {payment.ReceiptNo}");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ SavePayment Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                 throw;
             }
         }
@@ -163,6 +187,87 @@ namespace KGHCashierPOS
                 return false;
             }
         }
+
+        // ============ GET SESSION WITH EQUIPMENT ============
+        public static SessionWithEquipment GetSessionWithEquipment(int sessionId)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(Database.ConnectionString))
+                {
+                    conn.Open();
+
+                    // Get session
+                    string sessionQuery = @"
+                        SELECT session_id, game_name, start_time, end_time, 
+                               total_minutes, total_price, equipment_cost, status
+                        FROM sessions
+                        WHERE session_id = @sessionId";
+
+                    SessionWithEquipment session = null;
+
+                    using (var cmd = new MySqlCommand(sessionQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@sessionId", sessionId);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                session = new SessionWithEquipment
+                                {
+                                    SessionId = reader.GetInt32("session_id"),
+                                    GameName = reader.GetString("game_name"),
+                                    StartTime = reader.GetDateTime("start_time"),
+                                    EndTime = reader.GetDateTime("end_time"),
+                                    TotalMinutes = reader.GetInt32("total_minutes"),
+                                    TotalPrice = reader.GetDecimal("total_price"),
+                                    EquipmentCost = reader.GetDecimal("equipment_cost"),
+                                    Status = reader.GetString("status"),
+                                    Equipment = new List<Equipment>()
+                                };
+                            }
+                        }
+                    }
+
+                    if (session != null)
+                    {
+                        // Get equipment
+                        string equipQuery = @"
+                            SELECT equipment_name, quantity, price_per_unit, 
+                                   equipment_type, total_cost
+                            FROM session_equipment
+                            WHERE session_id = @sessionId";
+
+                        using (var cmd = new MySqlCommand(equipQuery, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@sessionId", sessionId);
+
+                            using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    session.Equipment.Add(new Equipment
+                                    {
+                                        Name = reader.GetString("equipment_name"),
+                                        RentalQuantity = reader.GetInt32("quantity"),
+                                        Price = reader.GetDecimal("price_per_unit"),
+                                        Type = reader.GetString("equipment_type")
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    return session;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ GetSessionWithEquipment Error: {ex.Message}");
+                return null;
+            }
+        }
     }
 
     // ============ PAYMENT DATA CLASS ============
@@ -177,5 +282,19 @@ namespace KGHCashierPOS
         public string ReceiptNo { get; set; }
         public string Reference { get; set; }
         public DateTime PaymentDate { get; set; } = DateTime.Now;
+    }
+
+    // ============ SESSION WITH EQUIPMENT CLASS ============
+    public class SessionWithEquipment
+    {
+        public int SessionId { get; set; }
+        public string GameName { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int TotalMinutes { get; set; }
+        public decimal TotalPrice { get; set; }
+        public decimal EquipmentCost { get; set; }
+        public string Status { get; set; }
+        public List<Equipment> Equipment { get; set; } = new List<Equipment>();
     }
 }

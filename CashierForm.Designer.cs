@@ -45,7 +45,6 @@
             this.btnScooter = new System.Windows.Forms.Button();
             this.btnBadminton = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
-            this.chkExtend = new System.Windows.Forms.CheckBox();
             this.btn30min = new System.Windows.Forms.Button();
             this.btn1hour = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -69,8 +68,8 @@
             this.totalValue = new System.Windows.Forms.Label();
             this.btnClearCashierForm = new System.Windows.Forms.Button();
             this.timerDateTime = new System.Windows.Forms.Timer(this.components);
-            this.paymentPanel = new KGHCashierPOS.paymentControl1();
             this.rtbSelectedGames = new System.Windows.Forms.RichTextBox();
+            this.paymentPanel = new KGHCashierPOS.paymentControl1();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
@@ -258,7 +257,6 @@
             // panel3
             // 
             this.panel3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(233)))), ((int)(((byte)(190)))), ((int)(((byte)(95)))));
-            this.panel3.Controls.Add(this.chkExtend);
             this.panel3.Controls.Add(this.btn30min);
             this.panel3.Controls.Add(this.btn1hour);
             this.panel3.Controls.Add(this.label1);
@@ -266,18 +264,6 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(330, 191);
             this.panel3.TabIndex = 10;
-            // 
-            // chkExtend
-            // 
-            this.chkExtend.AutoSize = true;
-            this.chkExtend.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold);
-            this.chkExtend.Location = new System.Drawing.Point(21, 149);
-            this.chkExtend.Name = "chkExtend";
-            this.chkExtend.Size = new System.Drawing.Size(179, 32);
-            this.chkExtend.TabIndex = 21;
-            this.chkExtend.Text = "Extend Session";
-            this.chkExtend.UseVisualStyleBackColor = true;
-            this.chkExtend.Visible = false;
             // 
             // btn30min
             // 
@@ -555,6 +541,17 @@
             this.timerDateTime.Interval = 1000;
             this.timerDateTime.Tick += new System.EventHandler(this.timerDateTime_Tick);
             // 
+            // rtbSelectedGames
+            // 
+            this.rtbSelectedGames.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.rtbSelectedGames.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rtbSelectedGames.Location = new System.Drawing.Point(729, 112);
+            this.rtbSelectedGames.Name = "rtbSelectedGames";
+            this.rtbSelectedGames.ReadOnly = true;
+            this.rtbSelectedGames.Size = new System.Drawing.Size(390, 481);
+            this.rtbSelectedGames.TabIndex = 36;
+            this.rtbSelectedGames.Text = "";
+            // 
             // paymentPanel
             // 
             this.paymentPanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
@@ -564,17 +561,6 @@
             this.paymentPanel.Size = new System.Drawing.Size(1278, 650);
             this.paymentPanel.TabIndex = 35;
             this.paymentPanel.Visible = false;
-            // 
-            // rtbSelectedGames
-            // 
-            this.rtbSelectedGames.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.rtbSelectedGames.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rtbSelectedGames.Location = new System.Drawing.Point(729, 112);
-            this.rtbSelectedGames.Name = "rtbSelectedGames";
-            this.rtbSelectedGames.ReadOnly = true;
-            this.rtbSelectedGames.Size = new System.Drawing.Size(489, 481);
-            this.rtbSelectedGames.TabIndex = 36;
-            this.rtbSelectedGames.Text = "";
             // 
             // CashierForm
             // 
@@ -644,7 +630,6 @@
         private System.Windows.Forms.Button btnRemoveGame;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox txtOrderNumber;
-        private System.Windows.Forms.CheckBox chkExtend;
         private System.Windows.Forms.Button btn1;
         private System.Windows.Forms.Button btn2;
         private System.Windows.Forms.Button btn3;

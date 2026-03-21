@@ -60,17 +60,6 @@ namespace KGHCashierPOS
             ButtonStyleHelper.ApplyActionButtonStyle(btnRemove, Color.FromArgb(255, 152, 0)); // Orange
         }
 
-        private void OrderForm_Load(object sender, EventArgs e)
-        {
-            lblDate1.Text = DateTime.Now.ToString("MM/dd/yyyy");
-            lblTime1.Text = DateTime.Now.ToString("hh:mm tt");
-
-            Timer timeTimer = new Timer();
-            timeTimer.Interval = 1000;
-            timeTimer.Tick += (s, ev) => lblTime1.Text = DateTime.Now.ToString("hh:mm tt");
-            timeTimer.Start();
-        }
-
         // ============ DISPLAY UPDATES ============
         private void UpdateOrderNumberDisplay()
         {
@@ -163,7 +152,7 @@ namespace KGHCashierPOS
 
         private void ResetGameButtonColors()
         {
-            ButtonStyleHelper.ResetGameButtons(btnBilliards, btnScooter, btnBadminton, btnTableTennis);
+            ButtonStyleHelper.ResetGameButtons(btnBilliards, btnScooter, btnBadminton, btnTableTennis, btn30min, btn1hour);
         }
 
         // ============ DURATION SELECTION ============
@@ -385,6 +374,18 @@ namespace KGHCashierPOS
             UpdateTotalDisplay();
             ResetGameButtonColors();
             ResetDurationButtonColors();
+        }
+
+        // ============ DATE/TIME ============
+        private void timerDateTime1_Tick(object sender, EventArgs e)
+        {
+            UpdateDateTime();
+        }
+
+        private void UpdateDateTime()
+        {
+            lblDate.Text = DateTime.Now.ToString("MMMM dd, yyyy");
+            lblTime.Text = DateTime.Now.ToString("hh:mm:ss tt");
         }
     }
 }

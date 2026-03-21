@@ -32,8 +32,8 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblUser = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.lblDate1 = new System.Windows.Forms.Label();
-            this.lblTime1 = new System.Windows.Forms.Label();
+            this.lblDate = new System.Windows.Forms.Label();
+            this.lblTime = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.lblTotalValue = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
@@ -68,8 +68,8 @@
             this.panel1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(35)))));
             this.panel1.Controls.Add(this.lblUser);
             this.panel1.Controls.Add(this.label2);
-            this.panel1.Controls.Add(this.lblDate1);
-            this.panel1.Controls.Add(this.lblTime1);
+            this.panel1.Controls.Add(this.lblDate);
+            this.panel1.Controls.Add(this.lblTime);
             this.panel1.Controls.Add(this.pictureBox1);
             this.panel1.Location = new System.Drawing.Point(-8, -1);
             this.panel1.Name = "panel1";
@@ -97,27 +97,27 @@
             this.label2.TabIndex = 7;
             this.label2.Text = "Logged in as: ";
             // 
-            // lblDate1
+            // lblDate
             // 
-            this.lblDate1.AutoSize = true;
-            this.lblDate1.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblDate1.ForeColor = System.Drawing.SystemColors.Control;
-            this.lblDate1.Location = new System.Drawing.Point(73, 10);
-            this.lblDate1.Name = "lblDate1";
-            this.lblDate1.Size = new System.Drawing.Size(68, 28);
-            this.lblDate1.TabIndex = 6;
-            this.lblDate1.Text = "DATE:";
+            this.lblDate.AutoSize = true;
+            this.lblDate.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblDate.ForeColor = System.Drawing.SystemColors.Control;
+            this.lblDate.Location = new System.Drawing.Point(73, 10);
+            this.lblDate.Name = "lblDate";
+            this.lblDate.Size = new System.Drawing.Size(54, 28);
+            this.lblDate.TabIndex = 6;
+            this.lblDate.Text = "date";
             // 
-            // lblTime1
+            // lblTime
             // 
-            this.lblTime1.AutoSize = true;
-            this.lblTime1.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTime1.ForeColor = System.Drawing.SystemColors.Control;
-            this.lblTime1.Location = new System.Drawing.Point(73, 34);
-            this.lblTime1.Name = "lblTime1";
-            this.lblTime1.Size = new System.Drawing.Size(65, 28);
-            this.lblTime1.TabIndex = 5;
-            this.lblTime1.Text = "TIME:";
+            this.lblTime.AutoSize = true;
+            this.lblTime.Font = new System.Drawing.Font("Nirmala Text", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTime.ForeColor = System.Drawing.SystemColors.Control;
+            this.lblTime.Location = new System.Drawing.Point(73, 34);
+            this.lblTime.Name = "lblTime";
+            this.lblTime.Size = new System.Drawing.Size(55, 28);
+            this.lblTime.TabIndex = 5;
+            this.lblTime.Text = "time";
             // 
             // pictureBox1
             // 
@@ -371,7 +371,9 @@
             // 
             // timerDateTime1
             // 
+            this.timerDateTime1.Enabled = true;
             this.timerDateTime1.Interval = 1000;
+            this.timerDateTime1.Tick += new System.EventHandler(this.timerDateTime1_Tick);
             // 
             // btnClear
             // 
@@ -393,6 +395,7 @@
             this.equipmentRentalControl1.Name = "equipmentRentalControl1";
             this.equipmentRentalControl1.Size = new System.Drawing.Size(498, 548);
             this.equipmentRentalControl1.TabIndex = 50;
+            this.equipmentRentalControl1.Visible = false;
             // 
             // OrderForm
             // 
@@ -432,8 +435,8 @@
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label lblUser;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblDate1;
-        private System.Windows.Forms.Label lblTime1;
+        private System.Windows.Forms.Label lblDate;
+        private System.Windows.Forms.Label lblTime;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label lblTotalValue;
         private System.Windows.Forms.Label label6;

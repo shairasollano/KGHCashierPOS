@@ -6,7 +6,7 @@ namespace KGHCashierPOS
 {
     public static class OrderRepository
     {
-        // ============ SAVE ORDER ============
+        // ============ SAVE ORDER WITH EQUIPMENT ============
         public static void SaveOrder(string orderNumber, decimal totalAmount, List<OrderItem> items)
         {
             try
@@ -15,12 +15,11 @@ namespace KGHCashierPOS
                 {
                     conn.Open();
 
-                    // Start transaction
                     using (var transaction = conn.BeginTransaction())
                     {
                         try
                         {
-                            // Step 1: Insert into orders table
+                            // Step 1: Insert main order
                             string orderQuery = @"
                                 INSERT INTO orders 
                                 (order_number, customer_name, customer_age, customer_contact, total_amount, order_date, status)
@@ -36,18 +35,22 @@ namespace KGHCashierPOS
                                 cmd.Parameters.AddWithValue("@total", totalAmount);
                                 cmd.Parameters.AddWithValue("@date", DateTime.Now);
 
-                                int rowsAffected = cmd.ExecuteNonQuery();
-                                System.Diagnostics.Debug.WriteLine($"Order saved: {rowsAffected} row(s) affected");
+                                cmd.ExecuteNonQuery();
+                                System.Diagnostics.Debug.WriteLine($"✓ Order {orderNumber} saved");
                             }
 
-                            // Step 2: Insert order items
+                            // Step 2: Insert order items with equipment
                             foreach (var item in items)
                             {
+                                // Insert order item
                                 string itemQuery = @"
                                     INSERT INTO order_items 
                                     (order_number, game_name, duration_minutes, price, equipment_cost)
                                     VALUES 
-                                    (@orderNo, @game, @duration, @price, @equipCost)";
+                                    (@orderNo, @game, @duration, @price, @equipCost);
+                                    SELECT LAST_INSERT_ID();";
+
+                                int itemId = 0;
 
                                 using (var cmd = new MySqlCommand(itemQuery, conn, transaction))
                                 {
@@ -57,17 +60,49 @@ namespace KGHCashierPOS
                                     cmd.Parameters.AddWithValue("@price", item.GamePrice);
                                     cmd.Parameters.AddWithValue("@equipCost", item.EquipmentCost);
 
-                                    cmd.ExecuteNonQuery();
-                                    System.Diagnostics.Debug.WriteLine($"Item saved: {item.GameName}");
+                                    itemId = Convert.ToInt32(cmd.ExecuteScalar());
+                                    System.Diagnostics.Debug.WriteLine($"  ✓ Item saved: {item.GameName} (ID: {itemId})");
                                 }
 
-                                // Optional: Save detailed equipment if needed
-                                // SaveEquipmentDetails(item, conn, transaction);
+                                // ⭐ Step 3: Insert equipment details
+                                if (item.Equipment != null && item.Equipment.Count > 0)
+                                {
+                                    foreach (var equipment in item.Equipment)
+                                    {
+                                        // Save all equipment (including defaults with 0 rental quantity)
+                                        int totalQuantity = equipment.DefaultQuantity + equipment.RentalQuantity;
+
+                                        if (totalQuantity > 0)
+                                        {
+                                            string equipQuery = @"
+                                                INSERT INTO order_equipment 
+                                                (item_id, equipment_name, quantity, price_per_unit, equipment_type, total_cost)
+                                                VALUES 
+                                                (@itemId, @name, @qty, @price, @type, @totalCost)";
+
+                                            using (var cmd = new MySqlCommand(equipQuery, conn, transaction))
+                                            {
+                                                cmd.Parameters.AddWithValue("@itemId", itemId);
+                                                cmd.Parameters.AddWithValue("@name", equipment.Name);
+                                                cmd.Parameters.AddWithValue("@qty", equipment.RentalQuantity);
+                                                cmd.Parameters.AddWithValue("@price", equipment.Price);
+                                                cmd.Parameters.AddWithValue("@type", equipment.Type);
+                                                cmd.Parameters.AddWithValue("@totalCost", equipment.TotalCost);
+
+                                                cmd.ExecuteNonQuery();
+
+                                                System.Diagnostics.Debug.WriteLine(
+                                                    $"    ✓ Equipment: {equipment.Name} x{equipment.RentalQuantity} " +
+                                                    $"({equipment.Type}) = {equipment.TotalCost:C}"
+                                                );
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
-                            // Commit transaction
                             transaction.Commit();
-                            System.Diagnostics.Debug.WriteLine($"✓ Order {orderNumber} saved successfully!");
+                            System.Diagnostics.Debug.WriteLine($"✓ Order {orderNumber} fully saved with equipment!");
                         }
                         catch (Exception ex)
                         {
@@ -80,11 +115,11 @@ namespace KGHCashierPOS
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ SaveOrder Error: {ex.Message}");
-                throw new Exception($"Failed to save order: {ex.Message}", ex);
+                throw;
             }
         }
 
-        // ============ LOAD ORDER ============
+        // ============ LOAD ORDER WITH EQUIPMENT ============
         public static List<OrderItemData> LoadOrder(string orderNumber)
         {
             List<OrderItemData> items = new List<OrderItemData>();
@@ -95,7 +130,7 @@ namespace KGHCashierPOS
                 {
                     conn.Open();
 
-                    // Step 1: Check if order exists and is pending
+                    // Check if order exists
                     string checkQuery = @"
                         SELECT COUNT(*) 
                         FROM orders 
@@ -106,18 +141,17 @@ namespace KGHCashierPOS
                         cmd.Parameters.AddWithValue("@orderNo", orderNumber);
                         int count = Convert.ToInt32(cmd.ExecuteScalar());
 
-                        System.Diagnostics.Debug.WriteLine($"Order {orderNumber} check: {count} found");
-
                         if (count == 0)
                         {
-                            System.Diagnostics.Debug.WriteLine($"Order {orderNumber} not found or not pending");
-                            return null; // Order not found or already processed
+                            System.Diagnostics.Debug.WriteLine($"Order {orderNumber} not found");
+                            return null;
                         }
                     }
 
-                    // Step 2: Load order items
+                    // Load order items
                     string itemsQuery = @"
                         SELECT 
+                            item_id,
                             game_name, 
                             duration_minutes, 
                             price, 
@@ -134,16 +168,58 @@ namespace KGHCashierPOS
                         {
                             while (reader.Read())
                             {
+                                int itemId = reader.GetInt32("item_id");
+
                                 var item = new OrderItemData
                                 {
+                                    ItemId = itemId,
                                     GameName = reader.GetString("game_name"),
                                     Duration = reader.GetInt32("duration_minutes"),
                                     Price = reader.GetDecimal("price"),
-                                    EquipmentCost = reader.GetDecimal("equipment_cost")
+                                    EquipmentCost = reader.GetDecimal("equipment_cost"),
+                                    Equipment = new List<Equipment>()
                                 };
 
                                 items.Add(item);
-                                System.Diagnostics.Debug.WriteLine($"Loaded item: {item.GameName} - ₱{item.TotalPrice}");
+                            }
+                        }
+                    }
+
+                    // ⭐ Load equipment for each item
+                    foreach (var item in items)
+                    {
+                        string equipQuery = @"
+                            SELECT 
+                                equipment_name,
+                                quantity,
+                                price_per_unit,
+                                equipment_type,
+                                total_cost
+                            FROM order_equipment
+                            WHERE item_id = @itemId";
+
+                        using (var cmd = new MySqlCommand(equipQuery, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@itemId", item.ItemId);
+
+                            using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    var equipment = new Equipment
+                                    {
+                                        Name = reader.GetString("equipment_name"),
+                                        RentalQuantity = reader.GetInt32("quantity"),
+                                        Price = reader.GetDecimal("price_per_unit"),
+                                        Type = reader.GetString("equipment_type")
+                                    };
+
+                                    item.Equipment.Add(equipment);
+
+                                    System.Diagnostics.Debug.WriteLine(
+                                        $"  Loaded equipment: {equipment.Name} x{equipment.RentalQuantity} ({equipment.Type})"
+                                    );
+                                }
                             }
                         }
                     }
@@ -154,7 +230,6 @@ namespace KGHCashierPOS
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"❌ LoadOrder Error: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return null;
             }
 
@@ -182,7 +257,7 @@ namespace KGHCashierPOS
                         cmd.Parameters.AddWithValue("@orderNo", orderNumber);
 
                         int rowsAffected = cmd.ExecuteNonQuery();
-                        System.Diagnostics.Debug.WriteLine($"Order {orderNumber} status updated to {status}: {rowsAffected} row(s)");
+                        System.Diagnostics.Debug.WriteLine($"Order {orderNumber} status → {status}");
                     }
                 }
             }
@@ -202,10 +277,7 @@ namespace KGHCashierPOS
                 {
                     conn.Open();
 
-                    string query = @"
-                        SELECT COUNT(*) 
-                        FROM orders 
-                        WHERE order_number = @orderNo";
+                    string query = "SELECT COUNT(*) FROM orders WHERE order_number = @orderNo";
 
                     using (var cmd = new MySqlCommand(query, conn))
                     {
@@ -215,9 +287,8 @@ namespace KGHCashierPOS
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"❌ OrderExists Error: {ex.Message}");
                 return false;
             }
         }
@@ -268,33 +339,6 @@ namespace KGHCashierPOS
             }
 
             return null;
-        }
-
-        // ============ DELETE ORDER ============
-        public static void DeleteOrder(string orderNumber)
-        {
-            try
-            {
-                using (var conn = new MySqlConnection(Database.ConnectionString))
-                {
-                    conn.Open();
-
-                    // Items will be auto-deleted due to CASCADE
-                    string query = "DELETE FROM orders WHERE order_number = @orderNo";
-
-                    using (var cmd = new MySqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@orderNo", orderNumber);
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        System.Diagnostics.Debug.WriteLine($"Order {orderNumber} deleted: {rowsAffected} row(s)");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"❌ DeleteOrder Error: {ex.Message}");
-                throw;
-            }
         }
     }
 

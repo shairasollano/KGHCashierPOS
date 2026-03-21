@@ -53,7 +53,7 @@ namespace KGHCashierPOS
             _gameName = gameName;
             _equipmentList = equipment;
 
-            lblGameName.Text = gameName;
+           
             lblTitle.Text = $"{gameName} - Equipment Rental";
 
             flowPanelEquipment.Controls.Clear();
@@ -63,9 +63,11 @@ namespace KGHCashierPOS
                 EquipmentItemControl itemControl = new EquipmentItemControl();
                 itemControl.Equipment = eq;
                 itemControl.QuantityChanged += ItemControl_QuantityChanged;
-                itemControl.Width = flowPanelEquipment.Width - 30;
+
+                itemControl.Width = flowPanelEquipment.ClientSize.Width - 10;
 
                 flowPanelEquipment.Controls.Add(itemControl);
+                this.Refresh();
             }
 
             UpdateTotal();
@@ -96,9 +98,12 @@ namespace KGHCashierPOS
             IsConfirmed = false;
 
             // Reset all quantities
-            foreach (var eq in _equipmentList)
+            if (_equipmentList != null)
             {
-                eq.RentalQuantity = 0;
+                foreach (var eq in _equipmentList)
+                {
+                    eq.RentalQuantity = 0;
+                }
             }
 
             this.Visible = false;
@@ -108,7 +113,19 @@ namespace KGHCashierPOS
 
         private void EquipmentRentalControl_Load(object sender, EventArgs e)
         {
-            InitializeComponent();
+            CenterInParent();
         }
+
+        public void CenterInParent()
+        {
+            if (this.Parent != null)
+            {
+                this.Location = new Point(
+                    (this.Parent.ClientSize.Width - this.Width) / 2,
+                    (this.Parent.ClientSize.Height - this.Height) / 2
+                );
+            }
+        }
+
     }
 }

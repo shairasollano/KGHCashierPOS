@@ -36,8 +36,11 @@ namespace KGHCashierPOS
 
             try
             {
-                PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+                PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
                 document.Open();
+
+                writer.PageEvent = null; // Ensure no headers/footers interfere
+                document.SetPageSize(new Rectangle(RECEIPT_WIDTH, requiredHeight));
 
                 // Fonts
                 Font headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14);
@@ -259,61 +262,57 @@ namespace KGHCashierPOS
         // ⭐ NEW METHOD: Calculate required height based on content
         private static float CalculateReceiptHeight(ReceiptData receipt)
         {
+            // 1. Fixed Elements (Points)
             float height = 0f;
+            height += 100f; // Header (Title, Address, Tel)
+            height += 60f;  // Receipt Info (No, Date, Cashier)
+            height += 40f;  // "ITEMS:" header
+            height += 110f; // Calculations (Subtotal, VAT Breakdown)
+            height += 60f;  // Total Amount Section
+            height += 60f;  // Payment Details (Method, Cash, Change)
+            height += 160f; // Footer (Thank you, Email, Website, Printed Date)
+            height += 20f;  // Extra bottom padding
 
-            // Header section (company name, address, TIN) - approximately 80pt
-            height += 80f;
+            // 2. Dynamic Session Items
+            foreach (var session in receipt.Sessions.Values)
+            {
+                height += 15f; // Game Name line
+                height += 15f; // Duration/Price line
 
-            // Receipt info (receipt no, date, cashier) - approximately 50pt
-            height += 50f;
+                // 3. Dynamic Equipment Items (The part that was missing!)
+                if (session.Equipment != null)
+                {
+                    foreach (var eq in session.Equipment)
+                    {
+                        if (eq.RentalQuantity > 0)
+                        {
+                            height += 12f; // Each equipment line
+                        }
+                    }
+                    if (session.EquipmentCost > 0) height += 12f; // Equipment subtotal line
+                }
 
-            // Items section
-            // Each item takes approximately 20pt (name + duration/price line)
-            height += receipt.Sessions.Count * 20f;
+                height += 10f; // Spacer between items
+            }
 
-            // Spacing and separators around items - approximately 30pt
-            height += 30f;
+            // 4. Dynamic Session Times (at the bottom)
+            if (receipt.Sessions.Count > 0)
+            {
+                height += 30f; // "SESSION TIMES:" header
+                foreach (var session in receipt.Sessions.Values)
+                {
+                    height += 45f; // Game Name + Start Time + End Time
+                }
+            }
 
-            // Calculations section (subtotal, discount, VAT breakdown) - approximately 80pt
-            height += 80f;
-
-            // If discount applied, add extra space
+            // 5. Discount section
             if (receipt.DiscountAmount > 0)
             {
-                height += 20f;
+                height += 40f;
             }
 
-            // Total section - approximately 30pt
-            height += 30f;
-
-            // Payment details - approximately 40pt
-            height += 40f;
-
-            // Session times section
-            // Each session takes approximately 30pt (game name + start + end)
-            height += receipt.Sessions.Count * 30f;
-
-            // Footer section - approximately 120pt
-            height += 120f;
-
-            // Add some buffer space (10% extra)
-            height *= 1.1f;
-
-            // Minimum height (for single item receipts)
-            if (height < 400f)
-            {
-                height = 400f;
-            }
-
-            // Maximum reasonable height (for very long receipts)
-            if (height > 2000f)
-            {
-                height = 2000f;
-            }
-
-            System.Diagnostics.Debug.WriteLine($"Calculated receipt height: {height}pt for {receipt.Sessions.Count} items");
-
-            return height;
+            // Add a 5% buffer for line spacing/scaling
+            return height + (height * 0.05f);
         }
 
         // ============ HELPER METHODS ============

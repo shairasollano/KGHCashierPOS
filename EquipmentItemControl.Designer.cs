@@ -81,11 +81,14 @@
             this.btnMinus.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnMinus.ForeColor = System.Drawing.Color.White;
             this.btnMinus.Location = new System.Drawing.Point(250, 25);
+            this.btnMinus.Margin = new System.Windows.Forms.Padding(0);
             this.btnMinus.Name = "btnMinus";
             this.btnMinus.Size = new System.Drawing.Size(40, 40);
             this.btnMinus.TabIndex = 3;
             this.btnMinus.Text = "-";
+            this.btnMinus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.btnMinus.UseVisualStyleBackColor = false;
+            this.btnMinus.Click += new System.EventHandler(this.btnMinus_Click);
             // 
             // lblQuantity
             // 
@@ -107,18 +110,21 @@
             this.btnPlus.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnPlus.ForeColor = System.Drawing.Color.White;
             this.btnPlus.Location = new System.Drawing.Point(350, 25);
+            this.btnPlus.Margin = new System.Windows.Forms.Padding(0);
             this.btnPlus.Name = "btnPlus";
             this.btnPlus.Size = new System.Drawing.Size(40, 40);
             this.btnPlus.TabIndex = 5;
             this.btnPlus.Text = "+";
+            this.btnPlus.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             this.btnPlus.UseVisualStyleBackColor = false;
+            this.btnPlus.Click += new System.EventHandler(this.btnPlus_Click);
             // 
             // lblDefaultInfo
             // 
             this.lblDefaultInfo.AutoSize = true;
             this.lblDefaultInfo.Font = new System.Drawing.Font("Segoe UI", 8F);
             this.lblDefaultInfo.ForeColor = System.Drawing.Color.Green;
-            this.lblDefaultInfo.Location = new System.Drawing.Point(220, 10);
+            this.lblDefaultInfo.Location = new System.Drawing.Point(93, 58);
             this.lblDefaultInfo.Name = "lblDefaultInfo";
             this.lblDefaultInfo.Size = new System.Drawing.Size(98, 21);
             this.lblDefaultInfo.TabIndex = 6;

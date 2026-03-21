@@ -75,9 +75,10 @@ namespace KGHCashierPOS
         }
 
         // ============ LOAD PAYMENT DATA ============
-        public void LoadPaymentData(Dictionary<string, GameSession> sessions, decimal total)
+        public void LoadPaymentData(Dictionary<string, GameSession> sessions, decimal total, string orderNumber = "")
         {
             _sessions = sessions;
+            currentOrderNumber = orderNumber;
             discountManager.ClearDiscount();
 
             // ⭐ Calculate subtotal from sessions (includes equipment)
@@ -113,8 +114,16 @@ namespace KGHCashierPOS
 
         private void BuildTransactionSummary()
         {
+
             rtbSummary.Clear();
             StringBuilder summary = new StringBuilder();
+
+
+            if (!string.IsNullOrEmpty(currentOrderNumber))
+            {
+                summary.AppendLine($"        Order #: {currentOrderNumber}");
+                summary.AppendLine();
+            }
 
             summary.AppendLine("        ════════════════════════════════════════════════");
             summary.AppendLine("            TRANSACTION DETAILS");
@@ -400,21 +409,38 @@ namespace KGHCashierPOS
             {
                 string receiptNo = "MPGH-" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
-                // Save to database
+                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+                System.Diagnostics.Debug.WriteLine("PROCESSING PAYMENT");
+                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+
+                // ⭐ Save sessions and payments to database
                 foreach (var session in _sessions.Values)
                 {
+                    System.Diagnostics.Debug.WriteLine($"\nProcessing session: {session.GameName}");
+                    System.Diagnostics.Debug.WriteLine($"  Game Price: {session.TotalPrice:C}");
+                    System.Diagnostics.Debug.WriteLine($"  Equipment Cost: {session.EquipmentCost:C}");
+                    System.Diagnostics.Debug.WriteLine($"  Equipment Count: {session.Equipment?.Count ?? 0}");
+
+                    // Save session (returns session_id)
                     int sessionId = PaymentRepository.SaveSession(session);
 
+                    if (sessionId <= 0)
+                    {
+                        throw new Exception("Failed to save session - invalid session ID");
+                    }
+
+                    // Save payment for this session
                     PaymentRepository.SavePayment(new PaymentData
                     {
                         SessionId = sessionId,
                         PaymentMethod = method,
-                        AmountPaid = calculator.Subtotal,
+                        AmountPaid = calculator.Subtotal, // Total before discount
                         DiscountType = discountManager.DiscountType,
                         DiscountAmount = discountManager.DiscountAmount,
-                        FinalAmount = calculator.GetFinalAmount(),
+                        FinalAmount = calculator.GetFinalAmount(), // ⭐ Final amount from calculator
                         ReceiptNo = receiptNo,
-                        Reference = reference
+                        Reference = reference,
+                        PaymentDate = DateTime.Now
                     });
                 }
 
@@ -422,6 +448,7 @@ namespace KGHCashierPOS
                 if (!string.IsNullOrEmpty(currentOrderNumber))
                 {
                     OrderRepository.UpdateOrderStatus(currentOrderNumber, "Completed");
+                    System.Diagnostics.Debug.WriteLine($"\n✓ Order {currentOrderNumber} marked as Completed");
                 }
 
                 // Generate receipt
@@ -438,6 +465,9 @@ namespace KGHCashierPOS
                     GCashReference = reference
                 });
 
+                System.Diagnostics.Debug.WriteLine($"\n✓ Receipt generated: {receiptPath}");
+                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+
                 MessageBox.Show("Payment successful!\nReceipt generated.", "Success",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -449,25 +479,42 @@ namespace KGHCashierPOS
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error processing payment: {ex.Message}", "Error",
+                MessageBox.Show($"Error processing payment:\n{ex.Message}\n\nPlease try again.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                System.Diagnostics.Debug.WriteLine($"Payment Error: {ex.Message}");
+
+                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
+                System.Diagnostics.Debug.WriteLine($"❌ Payment Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine("════════════════════════════════════════");
             }
         }
 
         // ============ UPDATE DISPLAYS ============
         private void UpdateDisplays()
         {
+            // 1. Calculate the final total
+            decimal finalTotal = calculator.Subtotal - discountManager.DiscountAmount;
+
+            // 2. Update Subtotal
             if (lblSubtotal != null)
                 lblSubtotal.Text = PriceFormatter.Format(calculator.Subtotal);
 
+            // 3. Update Discount
             if (lblDiscountAmount != null)
             {
                 lblDiscountAmount.Text = "-" + PriceFormatter.Format(discountManager.DiscountAmount);
                 lblDiscountAmount.ForeColor = Color.Red;
             }
 
-            // Recalculate change when totals change
+            // 4. Update Final Total (The new part!)
+            if (lblTotalAmount != null)
+            {
+                lblTotalAmount.Text = PriceFormatter.Format(finalTotal);
+                // Optional: Make it bold or a different color to stand out
+                lblTotalAmount.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
+            }
+
+            // 5. Recalculate change based on the NEW total
             if (rbCash != null && rbCash.Checked)
             {
                 ValidateCashPayment();

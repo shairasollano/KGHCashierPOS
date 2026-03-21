@@ -37,7 +37,6 @@
             this.lblTotalAmount = new System.Windows.Forms.Label();
             this.lblTotalLabel = new System.Windows.Forms.Label();
             this.flowPanelEquipment = new System.Windows.Forms.FlowLayoutPanel();
-            this.lblGameName = new System.Windows.Forms.Label();
             this.panelHeader.SuspendLayout();
             this.panelMainContent.SuspendLayout();
             this.panelSummary.SuspendLayout();
@@ -46,7 +45,6 @@
             // panelHeader
             // 
             this.panelHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(125)))), ((int)(((byte)(50)))));
-            this.panelHeader.Controls.Add(this.lblGameName);
             this.panelHeader.Controls.Add(this.lblTitle);
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
@@ -91,6 +89,7 @@
             this.btnCancel.TabIndex = 3;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = false;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnConfirm
             // 
@@ -106,6 +105,7 @@
             this.btnConfirm.TabIndex = 2;
             this.btnConfirm.Text = "Confirm and Add";
             this.btnConfirm.UseVisualStyleBackColor = false;
+            this.btnConfirm.Click += new System.EventHandler(this.btnConfirm_Click);
             // 
             // panelSummary
             // 
@@ -150,17 +150,6 @@
             this.flowPanelEquipment.TabIndex = 0;
             this.flowPanelEquipment.WrapContents = false;
             // 
-            // lblGameName
-            // 
-            this.lblGameName.AutoSize = true;
-            this.lblGameName.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblGameName.ForeColor = System.Drawing.Color.WhiteSmoke;
-            this.lblGameName.Location = new System.Drawing.Point(400, 26);
-            this.lblGameName.Name = "lblGameName";
-            this.lblGameName.Size = new System.Drawing.Size(80, 28);
-            this.lblGameName.TabIndex = 1;
-            this.lblGameName.Text = "Billiards";
-            // 
             // EquipmentRentalControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -191,6 +180,5 @@
         private System.Windows.Forms.Label lblTotalLabel;
         private System.Windows.Forms.Button btnConfirm;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Label lblGameName;
     }
 }
